@@ -41,7 +41,7 @@ public class VendorPaymentService {
     }
 
 
-    public VendorPaymentPlan updateVendorPayment(@PathVariable Long id, @RequestBody VendorPaymentPlan vendorPaymentPlan)
+    public VendorPaymentPlan updateVendorPayment(Long id, VendorPaymentPlan vendorPaymentPlan)
     {
         if(!vendorPaymentRepository.existsById(id))
         {
@@ -52,7 +52,7 @@ public class VendorPaymentService {
     }
 
 
-    public VendorPaymentPlan updatedVendorPayments(@PathVariable Long id , @RequestBody VendorPaymentPlan vendorPaymentPlan)
+    public VendorPaymentPlan updatedVendorPayments( Long id ,  VendorPaymentPlan vendorPaymentPlan)
     {
         return vendorPaymentRepository.findById(id).map(existingId->{
             existingId.setId(vendorPaymentPlan.getId());

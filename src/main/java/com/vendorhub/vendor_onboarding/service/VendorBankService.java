@@ -3,8 +3,7 @@ package com.vendorhub.vendor_onboarding.service;
 import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
 import com.vendorhub.vendor_onboarding.repository.VendorBankRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+
 
 import java.util.List;
 
@@ -12,13 +11,13 @@ import java.util.List;
 public class VendorBankService {
 
     private VendorBankRepository vendorBankRepository;
-    VendorBankService(VendorBankRepository vendorBankRepository,VendorBankDetail vendorBankDetail)
+    VendorBankService(VendorBankRepository vendorBankRepository)
     {
         this.vendorBankRepository=vendorBankRepository;
 
     }
 
-    public VendorBankDetail createVendorBankDetail(@RequestBody VendorBankDetail vendorBankDetail)
+    public VendorBankDetail createVendorBankDetail(VendorBankDetail vendorBankDetail)
     {
         return vendorBankRepository.save(vendorBankDetail);
     }
@@ -28,12 +27,12 @@ public class VendorBankService {
         return  vendorBankRepository.findAll();
     }
 
-    public VendorBankDetail getVendorBankDetailById(@PathVariable Long id)
+    public VendorBankDetail getVendorBankDetailById( Long id)
     {
         return  vendorBankRepository.findById(id).orElseThrow(()-> new RuntimeException("id not found : "+id));
     }
 
-    public void deleteVendorBankDetail(@PathVariable Long id)
+    public void deleteVendorBankDetail( Long id)
     {
         if (!vendorBankRepository.existsById(id))
         {
@@ -42,7 +41,7 @@ public class VendorBankService {
         vendorBankRepository.deleteById(id);
     }
 
-    public VendorBankDetail updateBankDetail(@PathVariable Long id ,@RequestBody VendorBankDetail vendorBankDetail)
+    public VendorBankDetail updateBankDetail(Long id ,VendorBankDetail vendorBankDetail)
     {
         if(!vendorBankRepository.existsById(id))
         {
@@ -52,7 +51,7 @@ public class VendorBankService {
         return vendorBankRepository.save(vendorBankDetail);
     }
 
-    public VendorBankDetail updateBankDetails(@PathVariable Long id , @RequestBody VendorBankDetail vendorBankDetail)
+    public VendorBankDetail updateBankDetails( Long id , VendorBankDetail vendorBankDetail)
     {
 
         return vendorBankRepository.findById(id).map(existing ->
