@@ -12,27 +12,31 @@ original delivery phases combined into one).
 ## Tech Stack
 
 - **Java 21**
-- **Spring Boot 3.3.4**
+- **Spring Boot 4.1.1**
 - **Gradle**
-- **PostgreSQL**
-- **Spring Security** + **JWT** (jjwt) — stateless authentication
+- **PostgreSQL** (H2 in-memory database for tests)
+- **Spring Security** + **OAuth2 Resource Server** (Nimbus JWT, HS256) — stateless authentication
 - **Lombok**
 
 ## Status
 
 ### ✅ Implemented
 - Vendor registration and login (`/api/auth/register`, `/api/auth/login`)
-- JWT-based stateless authentication (issue, validate, filter chain)
+- JWT-based stateless authentication; roles `VENDOR` and `ADMIN` (carried in the token's `scope` claim)
 - Password hashing with BCrypt
-- Global exception handling for validation and bad-request errors
-- `Vendor` entity (base auth fields: id, email, password, role, onboardingComplete)
+- Vendor onboarding sections (profile, business info, bank details, service area,
+  order policies, payment plan, media) — each vendor can only see and change their own
+- Menu: packages, dishes inside packages, and the vendor's own dish prices
+- Shared lists (dish catalog, event types, required items) — readable by everyone, changeable only by admins
+- Global exception handling: 400 validation errors, 404 not found, 409 conflicts
+- Integration tests (`VendorApiTests`)
 
 ### 🚧 Planned (see BRD Section 22 — Consolidated Build Scope)
 Organized by domain, to be built and tested one at a time:
 
 | Domain | Core Entities |
 |---|---|
-| Identity & Profile | Customer, Dish, Package, VendorPolicy, VendorCapacity |
+| Identity & Profile | Customer, VendorCapacity |
 | Lead Generation & Sharing | MenuLink (public/private) |
 | Booking, Quotation & Versioning | Order, OrderVersion, OrderItem, Quotation |
 | Payments | Payment, PaymentLink, PlatformFee |
@@ -40,20 +44,20 @@ Organized by domain, to be built and tested one at a time:
 | Resource Management | Staff, Equipment, RawMaterial, Logistics |
 | Financial & Inventory | Expense, FinancialSummary, InventoryItem |
 | Notifications & Dashboard | Notification, dashboard aggregation views |
+| Onboarding flow | `/api/vendor/onboarding/status`, `/api/vendor/onboarding`, `/api/vendor/onboarding/submit` |
 
 ## Project Structure
 
 ```
-com.vendorhub
+com.vendorhub.vendor_onboarding
 ├── VendorOnboardingApplication.java
-├── config/          → SecurityConfig, JwtAuthFilter
-├── controller/      → AuthController (+ upcoming domain controllers)
-├── service/         → AuthService, CustomUserDetailsService
-├── repository/      → VendorRepository
-├── entity/          → Vendor
-├── dto/             → RegisterRequest, LoginRequest, AuthResponse
-├── security/        → JwtUtil
-└── exception/       → GlobalExceptionHandler
+├── config/       → SecurityConfig (JWT encoder/decoder, access rules)
+├── controller/   → REST endpoints (AuthController, VendorController, ...)
+├── service/      → business logic, JwtService
+├── repository/   → Spring Data JPA repositories
+├── entity/       → JPA entities (Vendor, VendorProfile, ...)
+├── security/     → CurrentVendor (who is logged in)
+└── exception/    → GlobalExceptionHandler, ResourceNotFoundException
 ```
 
 ## Setup
@@ -63,43 +67,69 @@ com.vendorhub
    CREATE DATABASE vendor_onboarding;
    ```
 
-2. Update `src/main/resources/application.properties` with your local
-   Postgres username/password.
+2. Set your settings as environment variables (the values in
+   `application.properties` are only local-development defaults):
 
-3. **Important:** replace `jwt.secret` with your own long random string
-   before running anything beyond local testing.
+   | Variable | Default |
+   |---|---|
+   | `DB_URL` | `jdbc:postgresql://localhost:5432/vendor_onboarding` |
+   | `DB_USERNAME` | `postgres` |
+   | `DB_PASSWORD` | `postgres` |
+   | `JWT_SECRET` | a dev-only value — **always set your own long random string outside local testing** |
 
-4. Run the app:
+3. Run the app:
    ```bash
    ./gradlew bootRun
    ```
 
+4. Run the tests (uses an in-memory database, never touches PostgreSQL):
+   ```bash
+   ./gradlew test
+   ```
+
+### Making an admin
+Every new account is a `VENDOR`. To make one an admin, update it in the database and log in again
+(the role is read when the token is created):
+```sql
+UPDATE vendors SET role = 'ADMIN' WHERE email = 'admin@example.com';
+```
+
 ## API Reference
 
-### Auth (live)
+All routes other than `/api/auth/**` require `Authorization: Bearer <token>`.
+Errors are returned as JSON (`status`, `detail`, and for validation errors an `errors` map of field → message).
+
+### Auth
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register` | Create a vendor account, returns a JWT |
+| POST | `/api/auth/register` | Create a vendor account, returns a JWT (201) |
 | POST | `/api/auth/login` | Authenticate, returns a JWT |
+| GET | `/api/vendor/me` | Shows who the token belongs to |
 
-All routes other than `/api/auth/**` require `Authorization: Bearer <token>`.
+### Vendor onboarding (each vendor sees only their own data)
+Create your profile first — the other sections attach to it automatically.
+Each section supports `POST` (create, once), `GET` (list yours), `GET /{id}`, `PUT /{id}` (replace),
+`PATCH /{id}` (change only the fields you send) and `DELETE /{id}`.
 
-### Vendor Onboarding (planned — POST, insert-or-update per section)
 | Endpoint | Section |
 |---|---|
-| `/api/vendor/business-info` | Business identity, GSTIN, FSSAI |
+| `/api/vendor/profile` | Name and address (deleting it also deletes all sections below) |
+| `/api/vendor/business-info` | Business name, contact, GST, FSSAI, years in business |
 | `/api/vendor/bank-details` | Payout details |
 | `/api/vendor/service-area` | Capacity, PIN/city, min/max order |
-| `/api/vendor/order-policies` | Edit window, cancellation, max discount |
-| `/api/vendor/payment-plan` | Advance/pre/post payment % |
-| `/api/vendor/media` | Photos, videos |
-| `/api/vendor/required-items` | Table, chair, light, generator |
-| `/api/vendor/event-types` | Supported event types |
-| `/api/vendor/dishes` | Add dish |
-| `/api/vendor/packages` | Add package |
-| `/api/vendor/onboarding/status` | Section completion status |
-| `/api/vendor/onboarding` | Full onboarding read (resume/review) |
-| `/api/vendor/onboarding/submit` | Mark onboarding complete |
+| `/api/vendor/order-policies` | Modify window, cancellation grace period |
+| `/api/vendor/payment-plan` | Advance/pre/post payment |
+| `/api/vendor/media` | Photo and video |
+| `/api/vendor/packages` | Your menu packages |
+| `/api/vendor/package-dishes` | Dishes inside your packages |
+| `/api/vendor/dishes` | Dishes you offer, with your price |
+
+### Shared lists (everyone can read, only `ADMIN` can create/change/delete)
+| Endpoint | List |
+|---|---|
+| `/api/dishes` | Dish catalog |
+| `/api/vendor/event-types` | Event types |
+| `/api/vendor/required-items` | Table, chair, light, generator, ... |
 
 ## Testing (Postman / curl)
 
@@ -114,14 +144,39 @@ Content-Type: application/json
 }
 ```
 
-**Login**
+**Login** (`identifier` is your email or phone)
 ```
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "vendor1@test.com",
+  "identifier": "vendor1@test.com",
   "password": "password123"
+}
+```
+
+**Create your profile**
+```
+POST http://localhost:8080/api/vendor/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Spice Caterers",
+  "address": "MG Road, Bangalore"
+}
+```
+
+**Add bank details**
+```
+POST http://localhost:8080/api/vendor/bank-details
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "accountNumber": "1234567890",
+  "accountHolderName": "Spice Caterers",
+  "ifscCode": "HDFC0001234"
 }
 ```
 

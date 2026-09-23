@@ -1,73 +1,73 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
-import com.vendorhub.vendor_onboarding.repository.PackageRepository;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Service
 public class PackageDishService {
 
-    private PackageDishRepository packageDishRepository;
+    private final PackageDishRepository packageDishRepository;
+    private final PackageService packageService;
+    private final DishService dishService;
+    private final CurrentVendor currentVendor;
 
-    PackageDishService(PackageDishRepository packageDishRepository)
+    PackageDishService(PackageDishRepository packageDishRepository, PackageService packageService,
+                       DishService dishService, CurrentVendor currentVendor)
     {
-        this.packageDishRepository=packageDishRepository;
+        this.packageDishRepository = packageDishRepository;
+        this.packageService = packageService;
+        this.dishService = dishService;
+        this.currentVendor = currentVendor;
     }
 
-
-    public PackageDish createPackageDish( PackageDish packageDish)
+    public PackageDish createPackageDish(PackageDish packageDish)
     {
+        packageDish.setId(null);
+        // Load the real rows: the package must belong to this vendor, and both must exist
+        packageDish.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
+        packageDish.setDish(dishService.getDishById(packageDish.getDish().getId()));
         return packageDishRepository.save(packageDish);
     }
 
-
-    public List<PackageDish> getAllPackageDish()
+    public List<PackageDish> getMyPackageDishes()
     {
-        return packageDishRepository.findAll();
+        return packageDishRepository.findByMenuPackageVendorId(currentVendor.id());
     }
 
-
-    public PackageDish getAllPackageDishById( Long id)
+    public PackageDish getPackageDishById(Long id)
     {
-        return packageDishRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
+        return packageDishRepository.findByIdAndMenuPackageVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Package dish", id));
     }
-
 
     public void deletePackageDish(Long id)
     {
-        if(!packageDishRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        packageDishRepository.deleteById(id);
+        packageDishRepository.delete(getPackageDishById(id));
     }
 
-
-    public PackageDish updatePackageDish(Long id , PackageDish packageDish)
+    public PackageDish updatePackageDish(Long id, PackageDish packageDish)
     {
-        if(!packageDishRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        packageDish.setId(id);
-        return packageDishRepository.save(packageDish);
+        PackageDish existing = getPackageDishById(id);
+        existing.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
+        existing.setDish(dishService.getDishById(packageDish.getDish().getId()));
+        existing.setQuantity(packageDish.getQuantity());
+        return packageDishRepository.save(existing);
     }
 
-
-    public PackageDish updatePackageDishes(@PathVariable Long id,@RequestBody PackageDish packageDish)
+    public PackageDish patchPackageDish(Long id, PackageDish packageDish)
     {
-        return packageDishRepository.findById(id).map(existing->{
-
-            existing.setDish(packageDish.getDish());
-            existing.setPackageEntity(packageDish.getPackageEntity());
-            existing.setQuantity(packageDish.getQuantity());
-
-            return packageDishRepository.save(existing);
-        }).orElseThrow(()->new VendorNotFoundException(id));
+        PackageDish existing = getPackageDishById(id);
+        if (packageDish.getMenuPackage() != null)
+        {
+            existing.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
+        }
+        if (packageDish.getDish() != null) existing.setDish(dishService.getDishById(packageDish.getDish().getId()));
+        if (packageDish.getQuantity() != null) existing.setQuantity(packageDish.getQuantity());
+        return packageDishRepository.save(existing);
     }
 }

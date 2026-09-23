@@ -1,15 +1,13 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 
 @Entity
 @Table(name = "vendor_service_area")
@@ -19,47 +17,46 @@ public class VendorServiceArea {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
     private Long id;
 
-    @NonNull
+    @NotNull(message = "max people is required")
+    @Max(value = 1000, message = "maximum that can be served is 1000")
     @Column(name = "max_people")
-    @Max(value = 1000 , message = "Maximum can be served = 1000 .")
-    private Long MaxPeople;
+    private Long maxPeople;
 
-    @NotBlank(message = "Service PIN is required .")
+    @NotBlank(message = "service PIN is required")
     @Column(name = "service_pin")
-    private String ServicePIN;
+    private String servicePin;
 
-    @NotBlank(message = "Service City is required .")
+    @NotBlank(message = "service city is required")
     @Column(name = "service_city")
-    private String ServiceCity;
+    private String serviceCity;
 
-    @NotBlank(message = "Service Country is required .")
+    @NotBlank(message = "service country is required")
     @Column(name = "service_country")
-    private String ServiceCountry;
+    private String serviceCountry;
 
-    @NotNull
+    @NotNull(message = "order size is required")
     @Column(name = "order_size")
-    private Long OrderSize;
+    private Long orderSize;
 
-    @Min(value = 200 , message = "minimum order band is 200 .")
-    @NotNull
+    @NotNull(message = "minimum order size is required")
+    @Min(value = 200, message = "minimum order size must be at least 200")
     @Column(name = "minimum_order_size")
-    private Long MinimumOrderSize;
+    private Long minimumOrderSize;
 
-    @Max(value = 1000 , message = "maximum order band is 1000 ")
-    @NotNull
+    @NotNull(message = "maximum order size is required")
+    @Max(value = 1000, message = "maximum order size cannot be more than 1000")
     @Column(name = "maximum_order_size")
-    private Long MaximumOrderSize;
+    private Long maximumOrderSize;
 
-    @NotNull
-    @Min(value = 250 , message = "250/plate")
+    @NotNull(message = "minimum order value is required")
+    @Min(value = 250, message = "minimum order value must be at least 250 per plate")
     @Column(name = "minimum_order_value")
-    private Long MinOrderValue;
+    private Long minOrderValue;
 
     @OneToOne
-    @JoinColumn(name = "vendor_id" , nullable = false ,referencedColumnName = "id")
-    @JsonBackReference
+    @JoinColumn(name = "vendor_id", nullable = false, referencedColumnName = "id")
+    @JsonIgnore
     private VendorProfile vendorProfile;
 }

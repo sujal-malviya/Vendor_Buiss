@@ -1,9 +1,9 @@
 package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.VendorMedia;
-import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.service.VendorMediaService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,47 +12,48 @@ import java.util.List;
 @RequestMapping("/api/vendor/media")
 public class VendorMediaController {
 
-    private VendorMediaService vendorMediaService;
+    private final VendorMediaService vendorMediaService;
 
     VendorMediaController(VendorMediaService vendorMediaService)
     {
-        this.vendorMediaService =vendorMediaService;
+        this.vendorMediaService = vendorMediaService;
     }
 
     @PostMapping
-    public VendorMedia createVendorMedia(@Valid @RequestBody VendorMedia vendorMedia)
+    @ResponseStatus(HttpStatus.CREATED)
+    public VendorMedia createMedia(@Valid @RequestBody VendorMedia media)
     {
-        return vendorMediaService.createVendorMedia(vendorMedia);
+        return vendorMediaService.createMedia(media);
     }
 
     @GetMapping
-    public List<VendorMedia> getAllVendorMedia()
+    public List<VendorMedia> getMyMedia()
     {
-
-        return vendorMediaService.getAllVendorMedia();
+        return vendorMediaService.getMyMedia();
     }
 
     @GetMapping("/{id}")
-    public VendorMedia getVendorProfileMediaById(@PathVariable Long id)
+    public VendorMedia getMediaById(@PathVariable Long id)
     {
-        return vendorMediaService.getVendorProfileMediaById(id);
+        return vendorMediaService.getMediaById(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteVendorMedia(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMedia(@PathVariable Long id)
     {
-        vendorMediaService.deleteVendorMedia(id);
+        vendorMediaService.deleteMedia(id);
     }
 
     @PutMapping("/{id}")
-    public VendorMedia updateVendorMedia(@PathVariable Long id,@RequestBody VendorMedia vendorMedia)
+    public VendorMedia updateMedia(@PathVariable Long id, @Valid @RequestBody VendorMedia media)
     {
-        return vendorMediaService.updateVendorMedia(id,vendorMedia);
+        return vendorMediaService.updateMedia(id, media);
     }
 
     @PatchMapping("/{id}")
-    public VendorMedia updatedVendorMedias(@PathVariable Long id , @RequestBody VendorMedia vendorMedia)
+    public VendorMedia patchMedia(@PathVariable Long id, @RequestBody VendorMedia media)
     {
-        return vendorMediaService.updatedVendorMedias(id,vendorMedia);
+        return vendorMediaService.patchMedia(id, media);
     }
 }

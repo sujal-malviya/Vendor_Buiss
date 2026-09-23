@@ -1,67 +1,70 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorPaymentPlan;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorPaymentRepository;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class VendorPaymentService {
-    private VendorPaymentRepository vendorPaymentRepository;
 
-    VendorPaymentService(VendorPaymentRepository vendorPaymentRepository)
+    private final VendorPaymentRepository vendorPaymentRepository;
+    private final CurrentVendor currentVendor;
+
+    VendorPaymentService(VendorPaymentRepository vendorPaymentRepository, CurrentVendor currentVendor)
     {
         this.vendorPaymentRepository = vendorPaymentRepository;
+        this.currentVendor = currentVendor;
     }
 
-    public VendorPaymentPlan createVendorPayment(VendorPaymentPlan vendorPaymentPlan)
+    public VendorPaymentPlan createPaymentPlan(VendorPaymentPlan paymentPlan)
     {
-        return vendorPaymentRepository.save(vendorPaymentPlan);
-    }
-
-
-    public List<VendorPaymentPlan> getAllVendorPayment()
-    {
-
-        return vendorPaymentRepository.findAll();
-    }
-
-
-    public VendorPaymentPlan getVendorPaymentById( Long id)
-    {
-        return vendorPaymentRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
-    }
-
-    public void deleteVendorPayment(Long id)
-    {
-        vendorPaymentRepository.deleteById(id);
-    }
-
-
-    public VendorPaymentPlan updateVendorPayment(Long id, VendorPaymentPlan vendorPaymentPlan)
-    {
-        if(!vendorPaymentRepository.existsById(id))
+        VendorProfile profile = currentVendor.profile();
+        if (vendorPaymentRepository.existsByVendorProfileId(profile.getId()))
         {
-            throw new VendorNotFoundException(id);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment plan already exists. Use PUT or PATCH to change it.");
         }
-        vendorPaymentPlan.setId(id);
-        return vendorPaymentRepository.save(vendorPaymentPlan);
+        paymentPlan.setId(null);
+        paymentPlan.setVendorProfile(profile);
+        return vendorPaymentRepository.save(paymentPlan);
     }
 
-
-    public VendorPaymentPlan updatedVendorPayments( Long id ,  VendorPaymentPlan vendorPaymentPlan)
+    public List<VendorPaymentPlan> getMyPaymentPlans()
     {
-        return vendorPaymentRepository.findById(id).map(existingId->{
+        return vendorPaymentRepository.findByVendorProfileVendorId(currentVendor.id());
+    }
 
-            existingId.setPrePayement(vendorPaymentPlan.getPrePayement());
-            existingId.setPostPayment(vendorPaymentPlan.getPostPayment());
-            existingId.setAdvancePayment(vendorPaymentPlan.getAdvancePayment());
+    public VendorPaymentPlan getPaymentPlanById(Long id)
+    {
+        return vendorPaymentRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment plan", id));
+    }
 
-            return vendorPaymentRepository.save(existingId);
-        }).orElseThrow(()->new VendorNotFoundException(id));
+    public void deletePaymentPlan(Long id)
+    {
+        vendorPaymentRepository.delete(getPaymentPlanById(id));
+    }
+
+    public VendorPaymentPlan updatePaymentPlan(Long id, VendorPaymentPlan paymentPlan)
+    {
+        VendorPaymentPlan existing = getPaymentPlanById(id);
+        paymentPlan.setId(existing.getId());
+        paymentPlan.setVendorProfile(existing.getVendorProfile());
+        return vendorPaymentRepository.save(paymentPlan);
+    }
+
+    public VendorPaymentPlan patchPaymentPlan(Long id, VendorPaymentPlan paymentPlan)
+    {
+        VendorPaymentPlan existing = getPaymentPlanById(id);
+        if (paymentPlan.getPrePayment() != null) existing.setPrePayment(paymentPlan.getPrePayment());
+        if (paymentPlan.getPostPayment() != null) existing.setPostPayment(paymentPlan.getPostPayment());
+        if (paymentPlan.getAdvancePayment() != null) existing.setAdvancePayment(paymentPlan.getAdvancePayment());
+        return vendorPaymentRepository.save(existing);
     }
 }

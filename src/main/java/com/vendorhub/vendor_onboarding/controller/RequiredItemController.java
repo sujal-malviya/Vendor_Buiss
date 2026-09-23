@@ -1,54 +1,60 @@
 package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.RequiredItem;
-import com.vendorhub.vendor_onboarding.service.RequireditemService;
+import com.vendorhub.vendor_onboarding.service.RequiredItemService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Shared list: every vendor can read it, only admins can change it (see SecurityConfig)
 @RestController
 @RequestMapping("/api/vendor/required-items")
 public class RequiredItemController {
 
-    private RequireditemService requireditemService;
-    RequiredItemController(RequireditemService requireditemService)
+    private final RequiredItemService requiredItemService;
+
+    RequiredItemController(RequiredItemService requiredItemService)
     {
-        this.requireditemService = requireditemService;
+        this.requiredItemService = requiredItemService;
     }
 
     @PostMapping
-    public RequiredItem createRequirement(@RequestBody RequiredItem requiredItem)
+    @ResponseStatus(HttpStatus.CREATED)
+    public RequiredItem createRequiredItem(@Valid @RequestBody RequiredItem requiredItem)
     {
-        return requireditemService.createRequirement(requiredItem);
+        return requiredItemService.createRequiredItem(requiredItem);
     }
 
     @GetMapping
-    public List<RequiredItem> getAllRequirements()
+    public List<RequiredItem> getAllRequiredItems()
     {
-        return requireditemService.getAllRequirements();
+        return requiredItemService.getAllRequiredItems();
     }
 
     @GetMapping("/{id}")
-    public RequiredItem getAllRequirementsById(@PathVariable Long id)
+    public RequiredItem getRequiredItemById(@PathVariable Long id)
     {
-        return  requireditemService.getAllRequirementsById(id);
+        return requiredItemService.getRequiredItemById(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteRequirement(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRequiredItem(@PathVariable Long id)
     {
-        requireditemService.deleteRequirement(id);
+        requiredItemService.deleteRequiredItem(id);
     }
 
     @PutMapping("/{id}")
-    public RequiredItem updateRequirement(@PathVariable Long id , @RequestBody RequiredItem requiredItem)
+    public RequiredItem updateRequiredItem(@PathVariable Long id, @Valid @RequestBody RequiredItem requiredItem)
     {
-        return requireditemService.updateRequirement(id, requiredItem);
+        return requiredItemService.updateRequiredItem(id, requiredItem);
     }
 
     @PatchMapping("/{id}")
-    public RequiredItem updateRequirements(@PathVariable Long id , @RequestBody RequiredItem requiredItem)
+    public RequiredItem patchRequiredItem(@PathVariable Long id, @RequestBody RequiredItem requiredItem)
     {
-        return requireditemService.updateRequirements(id, requiredItem);
+        return requiredItemService.patchRequiredItem(id, requiredItem);
     }
 }

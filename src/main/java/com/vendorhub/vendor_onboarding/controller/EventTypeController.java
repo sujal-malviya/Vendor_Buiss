@@ -2,15 +2,18 @@ package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.EventType;
 import com.vendorhub.vendor_onboarding.service.EventTypeService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Shared list: every vendor can read it, only admins can change it (see SecurityConfig)
 @RestController
 @RequestMapping("/api/vendor/event-types")
 public class EventTypeController {
 
-    private EventTypeService eventTypeService;
+    private final EventTypeService eventTypeService;
 
     EventTypeController(EventTypeService eventTypeService)
     {
@@ -18,42 +21,40 @@ public class EventTypeController {
     }
 
     @PostMapping
-    public EventType createEvent(@RequestBody EventType eventType)
+    @ResponseStatus(HttpStatus.CREATED)
+    public EventType createEventType(@Valid @RequestBody EventType eventType)
     {
-        return eventTypeService.createEvent(eventType);
+        return eventTypeService.createEventType(eventType);
     }
 
     @GetMapping
-    public List<EventType> getAllEvent()
+    public List<EventType> getAllEventTypes()
     {
-        return eventTypeService.getAllEvent();
+        return eventTypeService.getAllEventTypes();
     }
 
     @GetMapping("/{id}")
-    public EventType getAllEventById(@PathVariable Long id)
+    public EventType getEventTypeById(@PathVariable Long id)
     {
-        return eventTypeService.getAllEventById(id);
+        return eventTypeService.getEventTypeById(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteEventById(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEventType(@PathVariable Long id)
     {
-         eventTypeService.deleteEventById(id);
+        eventTypeService.deleteEventType(id);
     }
 
     @PutMapping("/{id}")
-    public EventType updateEvent(@PathVariable Long id,@RequestBody EventType eventType)
+    public EventType updateEventType(@PathVariable Long id, @Valid @RequestBody EventType eventType)
     {
-        return eventTypeService.updateEvent(id,eventType);
+        return eventTypeService.updateEventType(id, eventType);
     }
 
     @PatchMapping("/{id}")
-    public EventType updateEvents(@PathVariable Long id,@RequestBody EventType eventType)
+    public EventType patchEventType(@PathVariable Long id, @RequestBody EventType eventType)
     {
-        return eventTypeService.updateEvents(id,eventType);
+        return eventTypeService.patchEventType(id, eventType);
     }
-
-
-
-
 }

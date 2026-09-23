@@ -3,24 +3,23 @@ package com.vendorhub.vendor_onboarding.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.vendorhub.vendor_onboarding.entity.Vendor;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
-import com.vendorhub.vendor_onboarding.service.Vendorservice;
+import com.vendorhub.vendor_onboarding.service.VendorProfileService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-// NEW: a protected API to test your token. Without a valid token it returns 401.
 @RestController
 @RequestMapping("/api/vendor")
 public class VendorController {
 
-    private Vendorservice vendorservice;
-    VendorController(Vendorservice vendorservice)
+    private final VendorProfileService vendorProfileService;
+
+    VendorController(VendorProfileService vendorProfileService)
     {
-        this.vendorservice=vendorservice;
+        this.vendorProfileService = vendorProfileService;
     }
 
 	@GetMapping("/me")
@@ -32,39 +31,40 @@ public class VendorController {
 	}
 
     @PostMapping("/profile")
-    public VendorProfile createVendor(@Valid @RequestBody VendorProfile vendorprofile)
+    @ResponseStatus(HttpStatus.CREATED)
+    public VendorProfile createProfile(@Valid @RequestBody VendorProfile vendorProfile)
     {
-        return vendorservice.createVendor(vendorprofile);
+        return vendorProfileService.createProfile(vendorProfile);
     }
 
     @GetMapping("/profile")
-    public List<VendorProfile> getAllVendor()
+    public List<VendorProfile> getMyProfiles()
     {
-        return vendorservice.getAllVendor();
+        return vendorProfileService.getMyProfiles();
     }
 
     @GetMapping("/profile/{id}")
-    public VendorProfile getVendorProfileById(@PathVariable Long id)
+    public VendorProfile getProfileById(@PathVariable Long id)
     {
-        return vendorservice.getVendorProfileById(id);
+        return vendorProfileService.getProfileById(id);
     }
 
     @DeleteMapping("/profile/{id}")
-    public void deleteVendorProfileById(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteProfile(@PathVariable Long id)
     {
-        vendorservice.deleteVendorProfileById(id);
+        vendorProfileService.deleteProfile(id);
     }
 
     @PutMapping("/profile/{id}")
-    public VendorProfile updateVendorProfile(@PathVariable Long id,@RequestBody VendorProfile vendorProfile)
+    public VendorProfile updateProfile(@PathVariable Long id, @Valid @RequestBody VendorProfile vendorProfile)
     {
-        return vendorservice.updateVendorProfile(id,vendorProfile);
+        return vendorProfileService.updateProfile(id, vendorProfile);
     }
 
-    @PatchMapping("profile/{id}")
-    public VendorProfile updatedVendorProfile(@PathVariable Long id , @RequestBody VendorProfile vendorProfile)
+    @PatchMapping("/profile/{id}")
+    public VendorProfile patchProfile(@PathVariable Long id, @RequestBody VendorProfile vendorProfile)
     {
-        return vendorservice.updatedVendorProfile(id,vendorProfile);
+        return vendorProfileService.patchProfile(id, vendorProfile);
     }
-
 }

@@ -1,19 +1,18 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-
-import com.vendorhub.vendor_onboarding.entity.Dish;
-import com.vendorhub.vendor_onboarding.entity.EventType;
-import com.vendorhub.vendor_onboarding.entity.Package;
+import com.vendorhub.vendor_onboarding.entity.MenuPackage;
 import com.vendorhub.vendor_onboarding.service.PackageService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/packages")
+@RequestMapping("/api/vendor/packages")
 public class PackageController {
 
-    private PackageService packageService;
+    private final PackageService packageService;
 
     PackageController(PackageService packageService)
     {
@@ -21,38 +20,40 @@ public class PackageController {
     }
 
     @PostMapping
-    public Package createPackage(@RequestBody Package packagee)
+    @ResponseStatus(HttpStatus.CREATED)
+    public MenuPackage createPackage(@Valid @RequestBody MenuPackage menuPackage)
     {
-        return packageService.createPackage(packagee);
+        return packageService.createPackage(menuPackage);
     }
 
     @GetMapping
-    public List<Package> getAllPackage()
+    public List<MenuPackage> getMyPackages()
     {
-        return packageService.getAllPackage();
+        return packageService.getMyPackages();
     }
 
     @GetMapping("/{id}")
-    public Package getAllPackageById(@PathVariable Long id)
+    public MenuPackage getPackageById(@PathVariable Long id)
     {
-        return packageService.getAllPackageById(id);
+        return packageService.getPackageById(id);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePackage(@PathVariable Long id)
     {
         packageService.deletePackage(id);
     }
 
     @PutMapping("/{id}")
-    public Package updatePackage(@PathVariable Long id,@RequestBody Package packagee)
+    public MenuPackage updatePackage(@PathVariable Long id, @Valid @RequestBody MenuPackage menuPackage)
     {
-        return packageService.updatePackage(id,packagee);
+        return packageService.updatePackage(id, menuPackage);
     }
 
     @PatchMapping("/{id}")
-    public Package updatePackages(@PathVariable Long id,@RequestBody Package packagee)
+    public MenuPackage patchPackage(@PathVariable Long id, @RequestBody MenuPackage menuPackage)
     {
-        return packageService.updatePackages(id,packagee);
+        return packageService.patchPackage(id, menuPackage);
     }
 }

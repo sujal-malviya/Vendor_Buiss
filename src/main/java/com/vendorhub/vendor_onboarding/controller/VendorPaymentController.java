@@ -1,57 +1,59 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorMedia;
 import com.vendorhub.vendor_onboarding.entity.VendorPaymentPlan;
 import com.vendorhub.vendor_onboarding.service.VendorPaymentService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vendor/payments")
+@RequestMapping("/api/vendor/payment-plan")
 public class VendorPaymentController {
 
-    private VendorPaymentService vendorPaymentService;
+    private final VendorPaymentService vendorPaymentService;
+
     VendorPaymentController(VendorPaymentService vendorPaymentService)
     {
-        this.vendorPaymentService =vendorPaymentService;
+        this.vendorPaymentService = vendorPaymentService;
     }
 
     @PostMapping
-    public VendorPaymentPlan createVendorPayment(@Valid @RequestBody VendorPaymentPlan vendorPaymentPlan)
+    @ResponseStatus(HttpStatus.CREATED)
+    public VendorPaymentPlan createPaymentPlan(@Valid @RequestBody VendorPaymentPlan paymentPlan)
     {
-        return vendorPaymentService.createVendorPayment(vendorPaymentPlan);
+        return vendorPaymentService.createPaymentPlan(paymentPlan);
     }
 
     @GetMapping
-    public List<VendorPaymentPlan> getAllVendorPayment()
+    public List<VendorPaymentPlan> getMyPaymentPlans()
     {
-
-        return vendorPaymentService.getAllVendorPayment();
+        return vendorPaymentService.getMyPaymentPlans();
     }
 
     @GetMapping("/{id}")
-    public VendorPaymentPlan getVendorPaymentById(@PathVariable Long id)
+    public VendorPaymentPlan getPaymentPlanById(@PathVariable Long id)
     {
-        return vendorPaymentService.getVendorPaymentById(id);
+        return vendorPaymentService.getPaymentPlanById(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteVendorPayment(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePaymentPlan(@PathVariable Long id)
     {
-        vendorPaymentService.deleteVendorPayment(id);
+        vendorPaymentService.deletePaymentPlan(id);
     }
 
     @PutMapping("/{id}")
-    public VendorPaymentPlan updateVendorPayment(@PathVariable Long id,@RequestBody VendorPaymentPlan vendorPaymentPlan)
+    public VendorPaymentPlan updatePaymentPlan(@PathVariable Long id, @Valid @RequestBody VendorPaymentPlan paymentPlan)
     {
-        return vendorPaymentService.updateVendorPayment(id,vendorPaymentPlan);
+        return vendorPaymentService.updatePaymentPlan(id, paymentPlan);
     }
 
     @PatchMapping("/{id}")
-    public VendorPaymentPlan updatedVendorPayments(@PathVariable Long id , @RequestBody VendorPaymentPlan vendorPaymentPlan)
+    public VendorPaymentPlan patchPaymentPlan(@PathVariable Long id, @RequestBody VendorPaymentPlan paymentPlan)
     {
-        return vendorPaymentService.updatedVendorPayments(id,vendorPaymentPlan);
+        return vendorPaymentService.patchPaymentPlan(id, paymentPlan);
     }
 }

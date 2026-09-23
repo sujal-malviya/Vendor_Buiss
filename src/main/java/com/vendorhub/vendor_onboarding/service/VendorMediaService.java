@@ -2,70 +2,68 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorMedia;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorMediaRepository;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class VendorMediaService {
 
-    private VendorMediaRepository vendorMediaRepository;
+    private final VendorMediaRepository vendorMediaRepository;
+    private final CurrentVendor currentVendor;
 
-    VendorMediaService(VendorMediaRepository vendorMediaRepository)
+    VendorMediaService(VendorMediaRepository vendorMediaRepository, CurrentVendor currentVendor)
     {
-        this.vendorMediaRepository=vendorMediaRepository;
+        this.vendorMediaRepository = vendorMediaRepository;
+        this.currentVendor = currentVendor;
     }
 
-    public List<VendorMedia> getAllVendorMedia()
+    public VendorMedia createMedia(VendorMedia media)
     {
-
-        return vendorMediaRepository.findAll();
-    }
-
-    public VendorMedia createVendorMedia(VendorMedia vendorMedia) {
-
-        return vendorMediaRepository.save(vendorMedia);
-    }
-
-    public VendorMedia getVendorProfileMediaById(Long id)
-    {
-        return vendorMediaRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
-    }
-
-    public void deleteVendorMedia(Long id )
-    {
-        if(!vendorMediaRepository.existsById(id))
+        VendorProfile profile = currentVendor.profile();
+        if (vendorMediaRepository.existsByVendorProfileId(profile.getId()))
         {
-            throw new VendorNotFoundException(id);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Media already exists. Use PUT or PATCH to change it.");
         }
-        vendorMediaRepository.deleteById(id);
+        media.setId(null);
+        media.setVendorProfile(profile);
+        return vendorMediaRepository.save(media);
     }
 
-    public VendorMedia updateVendorMedia(Long id,VendorMedia vendorMedia)
+    public List<VendorMedia> getMyMedia()
     {
-        if(!vendorMediaRepository.existsById(id))
-        {
-            throw new RuntimeException("id not found: "+id);
-        }
-        vendorMedia.setId(id);
-        return vendorMediaRepository.save(vendorMedia);
-
+        return vendorMediaRepository.findByVendorProfileVendorId(currentVendor.id());
     }
 
-
-    public VendorMedia updatedVendorMedias (Long id , VendorMedia vendorMedia)
+    public VendorMedia getMediaById(Long id)
     {
-        return vendorMediaRepository.findById(id).map(
-                existingProfile ->{
-                    existingProfile.setImage(vendorMedia.getImage());
-                    existingProfile.setVideo(vendorMedia.getVideo());
+        return vendorMediaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Media", id));
+    }
 
-                    return vendorMediaRepository.save(existingProfile);
-                }
-        ).orElseThrow(()-> new VendorNotFoundException(id));
+    public void deleteMedia(Long id)
+    {
+        vendorMediaRepository.delete(getMediaById(id));
+    }
 
+    public VendorMedia updateMedia(Long id, VendorMedia media)
+    {
+        VendorMedia existing = getMediaById(id);
+        media.setId(existing.getId());
+        media.setVendorProfile(existing.getVendorProfile());
+        return vendorMediaRepository.save(media);
+    }
 
+    public VendorMedia patchMedia(Long id, VendorMedia media)
+    {
+        VendorMedia existing = getMediaById(id);
+        if (media.getImage() != null) existing.setImage(media.getImage());
+        if (media.getVideo() != null) existing.setVideo(media.getVideo());
+        return vendorMediaRepository.save(existing);
     }
 }

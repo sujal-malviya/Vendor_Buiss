@@ -9,6 +9,7 @@ import com.vendorhub.vendor_onboarding.repository.VendorRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -28,6 +29,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+	private static final String[] SHARED_LISTS = {
+		"/api/dishes/**", "/api/vendor/event-types/**", "/api/vendor/required-items/**"};
+
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
@@ -36,6 +40,10 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/api/auth/register", "/api/auth/login", "/error",
 					"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+				// Shared lists: any logged-in vendor can read them, only admins can change them.
+				// SCOPE_ADMIN comes from the "scope" claim that JwtService puts in the token.
+				.requestMatchers(HttpMethod.GET, SHARED_LISTS).authenticated()
+				.requestMatchers(SHARED_LISTS).hasAuthority("SCOPE_ADMIN")
 				// FIX: was denyAll(), which blocked every other API even with a valid token
 				.anyRequest().authenticated())
 			// FIX: this is what reads "Authorization: Bearer <token>" and checks the token.

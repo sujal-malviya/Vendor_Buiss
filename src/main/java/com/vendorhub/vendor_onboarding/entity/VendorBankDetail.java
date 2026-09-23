@@ -1,6 +1,6 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -16,24 +16,20 @@ public class VendorBankDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @NotBlank(message = "account number is mandatory.")
+    @NotBlank(message = "account number is required")
     @Column(name = "account_number")
-    private String AccountNumber;
+    private String accountNumber;
 
-    @NotBlank(message = "account_holder_name field is required")
+    @NotBlank(message = "account holder name is required")
     @Column(name = "account_holder_name")
-    private String AccountHolderName;
+    private String accountHolderName;
 
-
-    @NotBlank(message = "IFSC CODE is required.")
+    @NotBlank(message = "IFSC code is required")
     @Column(name = "ifsc_code")
-    private String IFSC_Code;
+    private String ifscCode;
 
     @OneToOne
-    @JoinColumn(name = "vendor_id",referencedColumnName = "id",nullable = false)
-    @JsonBackReference
+    @JoinColumn(name = "vendor_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private VendorProfile vendorProfile;
-
-
 }

@@ -1,74 +1,66 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorDish;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorDishRepository;
-import lombok.Setter;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Service
 public class VendorDishService {
 
-    private VendorDishRepository vendorDishRepository;
+    private final VendorDishRepository vendorDishRepository;
+    private final DishService dishService;
+    private final CurrentVendor currentVendor;
 
-    VendorDishService(VendorDishRepository vendorDishRepository)
+    VendorDishService(VendorDishRepository vendorDishRepository, DishService dishService, CurrentVendor currentVendor)
     {
         this.vendorDishRepository = vendorDishRepository;
+        this.dishService = dishService;
+        this.currentVendor = currentVendor;
     }
 
-
-    public VendorDish createVendorDish( VendorDish vendorDish)
+    public VendorDish createVendorDish(VendorDish vendorDish)
     {
+        vendorDish.setId(null);
+        vendorDish.setVendor(currentVendor.vendor());
+        vendorDish.setDish(dishService.getDishById(vendorDish.getDish().getId()));
         return vendorDishRepository.save(vendorDish);
     }
 
-
-    public List<VendorDish> getAllVendorDish()
+    public List<VendorDish> getMyVendorDishes()
     {
-        return vendorDishRepository.findAll();
+        return vendorDishRepository.findByVendorId(currentVendor.id());
     }
 
-
-    public VendorDish getAllVendorDishById(Long id)
+    public VendorDish getVendorDishById(Long id)
     {
-        return vendorDishRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
+        return vendorDishRepository.findByIdAndVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor dish", id));
     }
 
-
-    public void deleteVendorDish( Long id)
+    public void deleteVendorDish(Long id)
     {
-        if(!vendorDishRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        vendorDishRepository.deleteById(id);
+        vendorDishRepository.delete(getVendorDishById(id));
     }
 
-
-    public VendorDish updateVendorDish( Long id, VendorDish vendorDish)
+    public VendorDish updateVendorDish(Long id, VendorDish vendorDish)
     {
-        if(!vendorDishRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        vendorDish.setId(id);
-        return vendorDishRepository.save(vendorDish);
+        VendorDish existing = getVendorDishById(id);
+        existing.setDish(dishService.getDishById(vendorDish.getDish().getId()));
+        existing.setPrice(vendorDish.getPrice());
+        existing.setAvailable(vendorDish.getAvailable());
+        return vendorDishRepository.save(existing);
     }
 
-
-    public VendorDish updateVendorDishes(Long id,VendorDish vendorDish)
+    public VendorDish patchVendorDish(Long id, VendorDish vendorDish)
     {
-        return vendorDishRepository.findById(id).map(existing->{
-
-            existing.setDish(vendorDish.getDish());
-            existing.setVendor(vendorDish.getVendor());
-            existing.setPrice(vendorDish.getPrice());
-            existing.setAvailable(vendorDish.getAvailable());
-
-            return vendorDishRepository.save(existing);
-        }).orElseThrow(()->new VendorNotFoundException(id));
+        VendorDish existing = getVendorDishById(id);
+        if (vendorDish.getDish() != null) existing.setDish(dishService.getDishById(vendorDish.getDish().getId()));
+        if (vendorDish.getPrice() != null) existing.setPrice(vendorDish.getPrice());
+        if (vendorDish.getAvailable() != null) existing.setAvailable(vendorDish.getAvailable());
+        return vendorDishRepository.save(existing);
     }
 }

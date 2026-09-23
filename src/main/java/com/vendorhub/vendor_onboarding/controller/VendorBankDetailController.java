@@ -1,54 +1,59 @@
 package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
-import com.vendorhub.vendor_onboarding.repository.VendorBankRepository;
 import com.vendorhub.vendor_onboarding.service.VendorBankService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vendor/bank-detail")
+@RequestMapping("/api/vendor/bank-details")
 public class VendorBankDetailController {
 
-    private VendorBankService vendorBankService;
+    private final VendorBankService vendorBankService;
+
     VendorBankDetailController(VendorBankService vendorBankService)
     {
-        this.vendorBankService=vendorBankService;
+        this.vendorBankService = vendorBankService;
     }
+
     @PostMapping
-    public VendorBankDetail createVendorBankDetail(@RequestBody VendorBankDetail vendorBankDetail)
+    @ResponseStatus(HttpStatus.CREATED)
+    public VendorBankDetail createBankDetail(@Valid @RequestBody VendorBankDetail bankDetail)
     {
-        return vendorBankService.createVendorBankDetail(vendorBankDetail);
+        return vendorBankService.createBankDetail(bankDetail);
     }
 
     @GetMapping
-    public List<VendorBankDetail> getVendorBankDetails()
+    public List<VendorBankDetail> getMyBankDetails()
     {
-        return  vendorBankService.getVendorBankDetails();
+        return vendorBankService.getMyBankDetails();
     }
 
     @GetMapping("/{id}")
-    public VendorBankDetail getVendorBankDetailById(@PathVariable Long id)
+    public VendorBankDetail getBankDetailById(@PathVariable Long id)
     {
-        return  vendorBankService.getVendorBankDetailById(id);
+        return vendorBankService.getBankDetailById(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteVendorBankDetail(@PathVariable Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBankDetail(@PathVariable Long id)
     {
-        vendorBankService.deleteVendorBankDetail(id);
+        vendorBankService.deleteBankDetail(id);
     }
 
     @PutMapping("/{id}")
-    public VendorBankDetail updateBankDetail(@PathVariable Long id ,@RequestBody VendorBankDetail vendorBankDetail)
+    public VendorBankDetail updateBankDetail(@PathVariable Long id, @Valid @RequestBody VendorBankDetail bankDetail)
     {
-        return vendorBankService.updateBankDetail(id,vendorBankDetail);
+        return vendorBankService.updateBankDetail(id, bankDetail);
     }
 
     @PatchMapping("/{id}")
-    public VendorBankDetail updateBankDetails(@PathVariable Long id , @RequestBody VendorBankDetail vendorBankDetail)
+    public VendorBankDetail patchBankDetail(@PathVariable Long id, @RequestBody VendorBankDetail bankDetail)
     {
-        return vendorBankService.updateBankDetails(id,vendorBankDetail);
+        return vendorBankService.patchBankDetail(id, bankDetail);
     }
 }

@@ -1,17 +1,19 @@
 package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.Dish;
-import com.vendorhub.vendor_onboarding.entity.EventType;
 import com.vendorhub.vendor_onboarding.service.DishService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// Shared dish catalog: every vendor can read it, only admins can change it (see SecurityConfig)
 @RestController
 @RequestMapping("/api/dishes")
 public class DishController {
 
-    private DishService dishService;
+    private final DishService dishService;
 
     DishController(DishService dishService)
     {
@@ -19,39 +21,40 @@ public class DishController {
     }
 
     @PostMapping
-    public Dish createDish(@RequestBody Dish dish)
+    @ResponseStatus(HttpStatus.CREATED)
+    public Dish createDish(@Valid @RequestBody Dish dish)
     {
         return dishService.createDish(dish);
     }
 
     @GetMapping
-    public List<Dish> getAllDish()
+    public List<Dish> getAllDishes()
     {
-        return dishService.getAllDish();
+        return dishService.getAllDishes();
     }
 
     @GetMapping("/{id}")
-    public Dish getAllDishById(@PathVariable Long id)
+    public Dish getDishById(@PathVariable Long id)
     {
-        return dishService.getAllDishById(id);
+        return dishService.getDishById(id);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDish(@PathVariable Long id)
     {
         dishService.deleteDish(id);
     }
 
     @PutMapping("/{id}")
-    public Dish updateDish(@PathVariable Long id,@RequestBody Dish dish)
+    public Dish updateDish(@PathVariable Long id, @Valid @RequestBody Dish dish)
     {
-        return dishService.updateDish(id,dish);
+        return dishService.updateDish(id, dish);
     }
 
     @PatchMapping("/{id}")
-    public Dish updateDishes(@PathVariable Long id,@RequestBody Dish dish)
+    public Dish patchDish(@PathVariable Long id, @RequestBody Dish dish)
     {
-        return dishService.updateDishes(id,dish);
+        return dishService.patchDish(id, dish);
     }
-
 }

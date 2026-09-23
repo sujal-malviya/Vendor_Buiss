@@ -29,6 +29,8 @@ public class JwtService {
 		JwtClaimsSet claims = JwtClaimsSet.builder()
 			.subject(vendor.getId().toString())
 			.claim("identifier", vendor.getUsername())
+			// Spring turns "scope": "ADMIN" into the authority SCOPE_ADMIN, which SecurityConfig checks
+			.claim("scope", vendor.getRole().name())
 			.issuedAt(issuedAt)
 			.expiresAt(issuedAt.plusSeconds(expirationSeconds))
 			.build();

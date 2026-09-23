@@ -1,77 +1,72 @@
 package com.vendorhub.vendor_onboarding.service;
 
-import com.vendorhub.vendor_onboarding.entity.Package;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.entity.MenuPackage;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
+import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
 import com.vendorhub.vendor_onboarding.repository.PackageRepository;
-import lombok.extern.slf4j.Slf4j;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Slf4j
 @Service
 public class PackageService {
 
-    private PackageRepository packageRepository;
+    private final PackageRepository packageRepository;
+    private final PackageDishRepository packageDishRepository;
+    private final CurrentVendor currentVendor;
 
-    PackageService(PackageRepository packageRepository)
+    PackageService(PackageRepository packageRepository, PackageDishRepository packageDishRepository, CurrentVendor currentVendor)
     {
         this.packageRepository = packageRepository;
+        this.packageDishRepository = packageDishRepository;
+        this.currentVendor = currentVendor;
     }
 
-
-    public Package createPackage(Package packagee)
+    public MenuPackage createPackage(MenuPackage menuPackage)
     {
-        return packageRepository.save(packagee);
+        menuPackage.setId(null);
+        menuPackage.setVendor(currentVendor.vendor());
+        return packageRepository.save(menuPackage);
     }
 
-
-    public List<Package> getAllPackage()
+    public List<MenuPackage> getMyPackages()
     {
-        return packageRepository.findAll();
+        return packageRepository.findByVendorId(currentVendor.id());
     }
 
-
-    public Package getAllPackageById(Long id)
+    public MenuPackage getPackageById(Long id)
     {
-        return packageRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
+        return packageRepository.findByIdAndVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Package", id));
     }
 
-
+    // Remove the dishes inside the package first, otherwise the package_dish foreign key blocks the delete
+    @Transactional
     public void deletePackage(Long id)
     {
-        if(!packageRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        packageRepository.deleteById(id);
+        MenuPackage menuPackage = getPackageById(id);
+        packageDishRepository.deleteByMenuPackageId(menuPackage.getId());
+        packageRepository.delete(menuPackage);
     }
 
-
-    public Package updatePackage( Long id, Package packagee)
+    public MenuPackage updatePackage(Long id, MenuPackage menuPackage)
     {
-        if(!packageRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        packagee.setId(id);
-        return packageRepository.save(packagee);
+        MenuPackage existing = getPackageById(id);
+        menuPackage.setId(existing.getId());
+        menuPackage.setVendor(existing.getVendor());
+        return packageRepository.save(menuPackage);
     }
 
-
-    public Package updatePackages(Long id,  Package packagee)
+    public MenuPackage patchPackage(Long id, MenuPackage menuPackage)
     {
-        return packageRepository.findById(id).map(existing->{
-
-            existing.setName(packagee.getName());
-            existing.setPrice(packagee.getPrice());
-            existing.setActive(packagee.getActive());
-            existing.setVendor(packagee.getVendor());
-            existing.setDescription(packagee.getDescription());
-            existing.setPriceUnit(packagee.getPriceUnit());
-
-            return packageRepository.save(existing);
-        }).orElseThrow(()->new VendorNotFoundException(id));
+        MenuPackage existing = getPackageById(id);
+        if (menuPackage.getName() != null) existing.setName(menuPackage.getName());
+        if (menuPackage.getDescription() != null) existing.setDescription(menuPackage.getDescription());
+        if (menuPackage.getPrice() != null) existing.setPrice(menuPackage.getPrice());
+        if (menuPackage.getPriceUnit() != null) existing.setPriceUnit(menuPackage.getPriceUnit());
+        if (menuPackage.getActive() != null) existing.setActive(menuPackage.getActive());
+        return packageRepository.save(existing);
     }
 }

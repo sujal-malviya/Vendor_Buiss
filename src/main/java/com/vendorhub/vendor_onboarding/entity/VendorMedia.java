@@ -1,6 +1,6 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -16,16 +16,16 @@ public class VendorMedia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "image is required.")
-    @Column(nullable = false , name = "image")
+    @NotBlank(message = "image is required")
+    @Column(nullable = false, name = "image")
     private String image;
 
-    @NotBlank(message = "video is required .")
-    @Column(nullable = false , name = "video")
+    @NotBlank(message = "video is required")
+    @Column(nullable = false, name = "video")
     private String video;
 
     @OneToOne
-    @JoinColumn(name = "vendor_id",referencedColumnName = "id",nullable = false)
-    @JsonBackReference
+    @JoinColumn(name = "vendor_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private VendorProfile vendorProfile;
 }

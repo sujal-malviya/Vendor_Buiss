@@ -2,55 +2,58 @@ package com.vendorhub.vendor_onboarding.controller;
 
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
 import com.vendorhub.vendor_onboarding.service.PackageDishService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vendor/package-dieshes")
+@RequestMapping("/api/vendor/package-dishes")
 public class PackageDishController {
 
-    private PackageDishService packageDishService;
+    private final PackageDishService packageDishService;
 
     PackageDishController(PackageDishService packageDishService)
     {
-        this.packageDishService=packageDishService;
+        this.packageDishService = packageDishService;
     }
 
     @PostMapping
-    public PackageDish createPackageDish(@RequestBody PackageDish packageDish)
+    @ResponseStatus(HttpStatus.CREATED)
+    public PackageDish createPackageDish(@Valid @RequestBody PackageDish packageDish)
     {
         return packageDishService.createPackageDish(packageDish);
     }
 
     @GetMapping
-    public List<PackageDish> getAllPackageDish()
+    public List<PackageDish> getMyPackageDishes()
     {
-        return packageDishService.getAllPackageDish();
+        return packageDishService.getMyPackageDishes();
     }
 
     @GetMapping("/{id}")
-    public PackageDish getAllPackageDishById(@PathVariable Long id)
+    public PackageDish getPackageDishById(@PathVariable Long id)
     {
-        return packageDishService.getAllPackageDishById(id);
+        return packageDishService.getPackageDishById(id);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePackageDish(@PathVariable Long id)
     {
         packageDishService.deletePackageDish(id);
     }
 
     @PutMapping("/{id}")
-    public PackageDish updatePackageDish(@PathVariable Long id,@RequestBody PackageDish packageDish)
+    public PackageDish updatePackageDish(@PathVariable Long id, @Valid @RequestBody PackageDish packageDish)
     {
-        return packageDishService.updatePackageDish(id,packageDish);
+        return packageDishService.updatePackageDish(id, packageDish);
     }
 
     @PatchMapping("/{id}")
-    public PackageDish updatePackageDishes(@PathVariable Long id,@RequestBody PackageDish packageDish)
+    public PackageDish patchPackageDish(@PathVariable Long id, @RequestBody PackageDish packageDish)
     {
-        return packageDishService.updatePackageDishes(id,packageDish);
+        return packageDishService.patchPackageDish(id, packageDish);
     }
-
 }

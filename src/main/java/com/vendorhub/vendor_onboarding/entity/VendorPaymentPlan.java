@@ -1,6 +1,6 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -16,21 +16,20 @@ public class VendorPaymentPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "PostPayment is required .")
-    @Column(nullable = false , name = "post_payment")
-    private String PostPayment;
+    @NotBlank(message = "post payment is required")
+    @Column(nullable = false, name = "post_payment")
+    private String postPayment;
 
+    @NotBlank(message = "pre payment is required")
+    @Column(nullable = false, name = "pre_payment")
+    private String prePayment;
 
-    @NotBlank(message = "Prepayment is required .")
-    @Column(nullable = false ,  name ="pre_payment")
-    private String PrePayement;
-
-    @NotBlank(message = "Advance Payemnt is required .")
-    @Column(nullable = false , name = "advance_payment")
-    private String AdvancePayment;
+    @NotBlank(message = "advance payment is required")
+    @Column(nullable = false, name = "advance_payment")
+    private String advancePayment;
 
     @OneToOne
-    @JoinColumn(name = "vendor_id",referencedColumnName = "id",nullable = false)
-    @JsonBackReference
+    @JoinColumn(name = "vendor_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private VendorProfile vendorProfile;
 }

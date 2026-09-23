@@ -1,69 +1,71 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
+import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorBankRepository;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class VendorBankService {
 
-    private VendorBankRepository vendorBankRepository;
-    VendorBankService(VendorBankRepository vendorBankRepository)
-    {
-        this.vendorBankRepository=vendorBankRepository;
+    private final VendorBankRepository vendorBankRepository;
+    private final CurrentVendor currentVendor;
 
+    VendorBankService(VendorBankRepository vendorBankRepository, CurrentVendor currentVendor)
+    {
+        this.vendorBankRepository = vendorBankRepository;
+        this.currentVendor = currentVendor;
     }
 
-    public VendorBankDetail createVendorBankDetail(VendorBankDetail vendorBankDetail)
+    public VendorBankDetail createBankDetail(VendorBankDetail bankDetail)
     {
-        return vendorBankRepository.save(vendorBankDetail);
-    }
-
-    public List<VendorBankDetail> getVendorBankDetails()
-    {
-        return  vendorBankRepository.findAll();
-    }
-
-    public VendorBankDetail getVendorBankDetailById( Long id)
-    {
-        return  vendorBankRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
-    }
-
-    public void deleteVendorBankDetail( Long id)
-    {
-        if (!vendorBankRepository.existsById(id))
+        VendorProfile profile = currentVendor.profile();
+        if (vendorBankRepository.existsByVendorProfileId(profile.getId()))
         {
-            throw new VendorNotFoundException(id);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bank details already exist. Use PUT or PATCH to change them.");
         }
-        vendorBankRepository.deleteById(id);
+        bankDetail.setId(null);
+        bankDetail.setVendorProfile(profile);
+        return vendorBankRepository.save(bankDetail);
     }
 
-    public VendorBankDetail updateBankDetail(Long id ,VendorBankDetail vendorBankDetail)
+    public List<VendorBankDetail> getMyBankDetails()
     {
-        if(!vendorBankRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        vendorBankDetail.setId(id);
-        return vendorBankRepository.save(vendorBankDetail);
+        return vendorBankRepository.findByVendorProfileVendorId(currentVendor.id());
     }
 
-    public VendorBankDetail updateBankDetails( Long id , VendorBankDetail vendorBankDetail)
+    // Looks the row up by id AND owner, so another vendor's id gives 404 instead of their data
+    public VendorBankDetail getBankDetailById(Long id)
     {
+        return vendorBankRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Bank detail", id));
+    }
 
-        return vendorBankRepository.findById(id).map(existing ->
-        {
-            existing.setIFSC_Code(vendorBankDetail.getIFSC_Code());
-            existing.setVendorProfile(vendorBankDetail.getVendorProfile());
-            existing.setAccountNumber(vendorBankDetail.getAccountNumber());
-            existing.setAccountHolderName(vendorBankDetail.getAccountHolderName());
+    public void deleteBankDetail(Long id)
+    {
+        vendorBankRepository.delete(getBankDetailById(id));
+    }
 
-            return vendorBankRepository.save(existing);
-        }
-        ).orElseThrow(()-> new VendorNotFoundException(id));
+    public VendorBankDetail updateBankDetail(Long id, VendorBankDetail bankDetail)
+    {
+        VendorBankDetail existing = getBankDetailById(id);
+        bankDetail.setId(existing.getId());
+        bankDetail.setVendorProfile(existing.getVendorProfile());
+        return vendorBankRepository.save(bankDetail);
+    }
+
+    public VendorBankDetail patchBankDetail(Long id, VendorBankDetail bankDetail)
+    {
+        VendorBankDetail existing = getBankDetailById(id);
+        if (bankDetail.getAccountNumber() != null) existing.setAccountNumber(bankDetail.getAccountNumber());
+        if (bankDetail.getAccountHolderName() != null) existing.setAccountHolderName(bankDetail.getAccountHolderName());
+        if (bankDetail.getIfscCode() != null) existing.setIfscCode(bankDetail.getIfscCode());
+        return vendorBankRepository.save(existing);
     }
 }

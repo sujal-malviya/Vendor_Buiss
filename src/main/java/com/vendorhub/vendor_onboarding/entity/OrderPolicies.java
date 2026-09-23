@@ -1,6 +1,6 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,21 +16,19 @@ public class OrderPolicies {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
-
+    private Long id;
 
     @Column(name = "modify_orders")
     private List<String> modifyOrders = new ArrayList<>();
 
     @Column(name = "cancel_grace_period")
-    private Boolean CancelGracePeriod ;
+    private Boolean cancelGracePeriod;
 
     @Column(name = "max_allowed_duration")
-    private String Max_allowed_duration ;
-
+    private String maxAllowedDuration;
 
     @OneToOne
-    @JoinColumn(name = "vendor_id" , nullable = false , referencedColumnName = "id")
-    @JsonBackReference
+    @JoinColumn(name = "vendor_id", nullable = false, referencedColumnName = "id")
+    @JsonIgnore
     private VendorProfile vendorProfile;
 }

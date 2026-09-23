@@ -1,80 +1,75 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.entity.VendorServiceArea;
-import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
-import com.vendorhub.vendor_onboarding.repository.VendorServiceRepository;
-import jakarta.validation.Valid;
+import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
+import com.vendorhub.vendor_onboarding.repository.VendorServiceAreaRepository;
+import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class VendorServiceAreaService {
 
-    private VendorServiceRepository vendorServiceRepository;
+    private final VendorServiceAreaRepository vendorServiceAreaRepository;
+    private final CurrentVendor currentVendor;
 
-    VendorServiceAreaService(VendorServiceRepository vendorServiceRepository)
+    VendorServiceAreaService(VendorServiceAreaRepository vendorServiceAreaRepository, CurrentVendor currentVendor)
     {
-        this.vendorServiceRepository=vendorServiceRepository;
+        this.vendorServiceAreaRepository = vendorServiceAreaRepository;
+        this.currentVendor = currentVendor;
     }
 
-
-    public VendorServiceArea createVendorServiceArea(  VendorServiceArea vendorServiceArea)
+    public VendorServiceArea createServiceArea(VendorServiceArea serviceArea)
     {
-        return vendorServiceRepository.save(vendorServiceArea);
-    }
-
-
-    public List<VendorServiceArea> getAllVendorServiceArea()
-    {
-
-        return vendorServiceRepository.findAll();
-    }
-
-
-    public VendorServiceArea getVendorServiceAreaById( Long id)
-    {
-
-        return vendorServiceRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
-    }
-
-
-    public void deleteVendorServiceAreaById( Long id)
-    {
-        if(!vendorServiceRepository.existsById(id))
+        VendorProfile profile = currentVendor.profile();
+        if (vendorServiceAreaRepository.existsByVendorProfileId(profile.getId()))
         {
-            throw new VendorNotFoundException(id);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Service area already exists. Use PUT or PATCH to change it.");
         }
-        vendorServiceRepository.deleteById(id);
+        serviceArea.setId(null);
+        serviceArea.setVendorProfile(profile);
+        return vendorServiceAreaRepository.save(serviceArea);
     }
 
-
-    public VendorServiceArea updateVendorServiceArea( Long id, VendorServiceArea vendorServiceArea)
+    public List<VendorServiceArea> getMyServiceAreas()
     {
-        if(!vendorServiceRepository.existsById(id))
-        {
-            throw new VendorNotFoundException(id);
-        }
-        vendorServiceArea.setId(id);
-        return vendorServiceRepository.save(vendorServiceArea);
+        return vendorServiceAreaRepository.findByVendorProfileVendorId(currentVendor.id());
     }
 
-
-    public VendorServiceArea updatedVendorServiceAreas( Long id ,  VendorServiceArea vendorServiceArea)
+    public VendorServiceArea getServiceAreaById(Long id)
     {
-        return vendorServiceRepository.findById(id).map(existing->{
+        return vendorServiceAreaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Service area", id));
+    }
 
-            existing.setServiceCity(vendorServiceArea.getServiceCity());
-            existing.setServicePIN(vendorServiceArea.getServicePIN());
-            existing.setServiceCountry(vendorServiceArea.getServiceCountry());
-            existing.setMaxPeople(vendorServiceArea.getMaxPeople());
-            existing.setMaximumOrderSize(vendorServiceArea.getMaximumOrderSize());
-            existing.setMinimumOrderSize(vendorServiceArea.getMinimumOrderSize());
-            existing.setMinOrderValue(vendorServiceArea.getMinOrderValue());
+    public void deleteServiceArea(Long id)
+    {
+        vendorServiceAreaRepository.delete(getServiceAreaById(id));
+    }
 
-            return vendorServiceRepository.save(existing);
+    public VendorServiceArea updateServiceArea(Long id, VendorServiceArea serviceArea)
+    {
+        VendorServiceArea existing = getServiceAreaById(id);
+        serviceArea.setId(existing.getId());
+        serviceArea.setVendorProfile(existing.getVendorProfile());
+        return vendorServiceAreaRepository.save(serviceArea);
+    }
 
-        }).orElseThrow(()->new VendorNotFoundException(id));
+    public VendorServiceArea patchServiceArea(Long id, VendorServiceArea serviceArea)
+    {
+        VendorServiceArea existing = getServiceAreaById(id);
+        if (serviceArea.getMaxPeople() != null) existing.setMaxPeople(serviceArea.getMaxPeople());
+        if (serviceArea.getServicePin() != null) existing.setServicePin(serviceArea.getServicePin());
+        if (serviceArea.getServiceCity() != null) existing.setServiceCity(serviceArea.getServiceCity());
+        if (serviceArea.getServiceCountry() != null) existing.setServiceCountry(serviceArea.getServiceCountry());
+        if (serviceArea.getOrderSize() != null) existing.setOrderSize(serviceArea.getOrderSize());
+        if (serviceArea.getMinimumOrderSize() != null) existing.setMinimumOrderSize(serviceArea.getMinimumOrderSize());
+        if (serviceArea.getMaximumOrderSize() != null) existing.setMaximumOrderSize(serviceArea.getMaximumOrderSize());
+        if (serviceArea.getMinOrderValue() != null) existing.setMinOrderValue(serviceArea.getMinOrderValue());
+        return vendorServiceAreaRepository.save(existing);
     }
 }
