@@ -34,7 +34,7 @@ public class RequiredItemController {
         return  requireditemService.getAllRequirementsById(id);
     }
 
-    @DeleteMapping("/{id}/")
+    @DeleteMapping("/{id}")
     public void deleteRequirement(@PathVariable Long id)
     {
         requireditemService.deleteRequirement(id);

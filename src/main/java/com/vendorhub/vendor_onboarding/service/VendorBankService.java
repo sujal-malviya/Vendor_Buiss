@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorBankRepository;
 import org.springframework.stereotype.Service;
 
@@ -29,14 +30,14 @@ public class VendorBankService {
 
     public VendorBankDetail getVendorBankDetailById( Long id)
     {
-        return  vendorBankRepository.findById(id).orElseThrow(()-> new RuntimeException("id not found : "+id));
+        return  vendorBankRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
     }
 
     public void deleteVendorBankDetail( Long id)
     {
         if (!vendorBankRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorBankRepository.deleteById(id);
     }
@@ -45,7 +46,7 @@ public class VendorBankService {
     {
         if(!vendorBankRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorBankDetail.setId(id);
         return vendorBankRepository.save(vendorBankDetail);
@@ -63,6 +64,6 @@ public class VendorBankService {
 
             return vendorBankRepository.save(existing);
         }
-        ).orElseThrow(()-> new RuntimeException("id not found : "+id));
+        ).orElseThrow(()-> new VendorNotFoundException(id));
     }
 }

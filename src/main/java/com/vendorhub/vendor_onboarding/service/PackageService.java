@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.Package;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class PackageService {
 
     public Package getAllPackageById(Long id)
     {
-        return packageRepository.findById(id).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        return packageRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
 
@@ -42,7 +43,7 @@ public class PackageService {
     {
         if(!packageRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         packageRepository.deleteById(id);
     }
@@ -52,7 +53,7 @@ public class PackageService {
     {
         if(!packageRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         packagee.setId(id);
         return packageRepository.save(packagee);
@@ -62,7 +63,7 @@ public class PackageService {
     public Package updatePackages(Long id,  Package packagee)
     {
         return packageRepository.findById(id).map(existing->{
-            existing.setId(packagee.getId());
+
             existing.setName(packagee.getName());
             existing.setPrice(packagee.getPrice());
             existing.setActive(packagee.getActive());
@@ -71,6 +72,6 @@ public class PackageService {
             existing.setPriceUnit(packagee.getPriceUnit());
 
             return packageRepository.save(existing);
-        }).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }

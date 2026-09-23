@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.EventType;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.EventTypeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class EventTypeService {
 
     public EventType getAllEventById( Long id)
     {
-        return eventTypeRepository.findById(id).orElseThrow(()-> new RuntimeException("Id not found : "+id));
+        return eventTypeRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
     }
 
 
@@ -40,7 +41,7 @@ public class EventTypeService {
     {
         if(!eventTypeRepository.existsById(id))
         {
-            throw new RuntimeException("Id not Found : "+id);
+            throw new VendorNotFoundException(id);
         }
         eventTypeRepository.deleteById(id);
     }
@@ -50,7 +51,7 @@ public class EventTypeService {
     {
         if(!eventTypeRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         eventType.setId(id);
         return eventTypeRepository.save(eventType);
@@ -60,12 +61,11 @@ public class EventTypeService {
     public EventType updateEvents(Long id,EventType eventType)
     {
         return eventTypeRepository.findById(id).map(existing->{
-            existing.setId(eventType.getId());
             existing.setName(eventType.getName());
             existing.setDescription(eventType.getDescription());
             existing.setActive(eventType.getActive());
 
             return eventTypeRepository.save(existing);
-        }).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }

@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
 import com.vendorhub.vendor_onboarding.repository.PackageRepository;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class PackageDishService {
 
     public PackageDish getAllPackageDishById( Long id)
     {
-        return packageDishRepository.findById(id).orElseThrow(()->new RuntimeException("Id not found"));
+        return packageDishRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
 
@@ -41,7 +42,7 @@ public class PackageDishService {
     {
         if(!packageDishRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         packageDishRepository.deleteById(id);
     }
@@ -51,7 +52,7 @@ public class PackageDishService {
     {
         if(!packageDishRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         packageDish.setId(id);
         return packageDishRepository.save(packageDish);
@@ -61,12 +62,12 @@ public class PackageDishService {
     public PackageDish updatePackageDishes(@PathVariable Long id,@RequestBody PackageDish packageDish)
     {
         return packageDishRepository.findById(id).map(existing->{
-            existing.setId(packageDish.getId());
+
             existing.setDish(packageDish.getDish());
             existing.setPackageEntity(packageDish.getPackageEntity());
             existing.setQuantity(packageDish.getQuantity());
 
             return packageDishRepository.save(existing);
-        }).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }

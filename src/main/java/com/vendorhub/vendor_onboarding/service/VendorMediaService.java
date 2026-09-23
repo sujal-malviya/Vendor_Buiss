@@ -2,6 +2,7 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorMedia;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorMediaRepository;
 import org.springframework.stereotype.Service;
 
@@ -30,14 +31,14 @@ public class VendorMediaService {
 
     public VendorMedia getVendorProfileMediaById(Long id)
     {
-        return vendorMediaRepository.findById(id).orElseThrow(()-> new RuntimeException("Id not found : "+id));
+        return vendorMediaRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
     }
 
     public void deleteVendorMedia(Long id )
     {
         if(!vendorMediaRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorMediaRepository.deleteById(id);
     }
@@ -63,7 +64,7 @@ public class VendorMediaService {
 
                     return vendorMediaRepository.save(existingProfile);
                 }
-        ).orElseThrow(()-> new RuntimeException("id not found : "+id));
+        ).orElseThrow(()-> new VendorNotFoundException(id));
 
 
     }

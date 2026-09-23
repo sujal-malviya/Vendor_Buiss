@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorServiceArea;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorServiceRepository;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class VendorServiceAreaService {
     public VendorServiceArea getVendorServiceAreaById( Long id)
     {
 
-        return vendorServiceRepository.findById(id).orElseThrow(()->new RuntimeException("id not found : "+id));
+        return vendorServiceRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
 
@@ -43,7 +44,7 @@ public class VendorServiceAreaService {
     {
         if(!vendorServiceRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorServiceRepository.deleteById(id);
     }
@@ -53,7 +54,7 @@ public class VendorServiceAreaService {
     {
         if(!vendorServiceRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorServiceArea.setId(id);
         return vendorServiceRepository.save(vendorServiceArea);
@@ -63,7 +64,7 @@ public class VendorServiceAreaService {
     public VendorServiceArea updatedVendorServiceAreas( Long id ,  VendorServiceArea vendorServiceArea)
     {
         return vendorServiceRepository.findById(id).map(existing->{
-            existing.setId(vendorServiceArea.getId());
+
             existing.setServiceCity(vendorServiceArea.getServiceCity());
             existing.setServicePIN(vendorServiceArea.getServicePIN());
             existing.setServiceCountry(vendorServiceArea.getServiceCountry());
@@ -72,8 +73,8 @@ public class VendorServiceAreaService {
             existing.setMinimumOrderSize(vendorServiceArea.getMinimumOrderSize());
             existing.setMinOrderValue(vendorServiceArea.getMinOrderValue());
 
-            return vendorServiceRepository.save(vendorServiceArea);
+            return vendorServiceRepository.save(existing);
 
-        }).orElseThrow(()->new RuntimeException("id not found : "+id ));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }

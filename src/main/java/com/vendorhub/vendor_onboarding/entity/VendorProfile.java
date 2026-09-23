@@ -32,4 +32,7 @@ public class VendorProfile {
     @OneToOne(mappedBy = "vendorProfile",cascade = CascadeType.ALL)
     @JsonManagedReference
     private VendorBuissnessInfo buissnessInfo;
+
+    @OneToOne(mappedBy = "vendor_profile",cascade = CascadeType.ALL)
+    private Vendor vendor;
 }

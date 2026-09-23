@@ -2,6 +2,7 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorBuissnessInfo;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorBuissnessInfoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,14 +31,14 @@ public class VendorBuissnessService {
 
     public VendorBuissnessInfo getVendorBuissnessProfileById(Long id)
     {
-        return vendorBuissnessInfoRepository.findById(id).orElseThrow(()->new RuntimeException("Buissness ID not found : "+id));
+        return vendorBuissnessInfoRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
     public void deleteVendorBuissnessProfile( Long id)
     {
         if(!vendorBuissnessInfoRepository.existsById(id))
         {
-            throw new RuntimeException("Buissness Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorBuissnessInfoRepository.deleteById(id);
 
@@ -48,7 +49,7 @@ public class VendorBuissnessService {
     {
         if(!vendorBuissnessInfoRepository.existsById(id))
         {
-            throw new RuntimeException("Buissness id not founf : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorBuissnessInfo.setId(id);
         return vendorBuissnessInfoRepository.save(vendorBuissnessInfo);
@@ -63,7 +64,7 @@ public class VendorBuissnessService {
 
                     return vendorBuissnessInfoRepository.save(existingProfile);
                 }
-        ).orElseThrow(()-> new RuntimeException("id not found : "+id));
+        ).orElseThrow(()-> new VendorNotFoundException(id));
 
 
     }

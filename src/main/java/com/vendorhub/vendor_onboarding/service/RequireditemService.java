@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.RequiredItem;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.RequiredItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class RequireditemService {
 
     public RequiredItem getAllRequirementsById( Long id)
     {
-        return  requiredItemRepository.findById(id).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        return  requiredItemRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
 
@@ -40,7 +41,7 @@ public class RequireditemService {
     {
         if(!requiredItemRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         requiredItemRepository.deleteById(id);
     }
@@ -50,7 +51,7 @@ public class RequireditemService {
     {
         if(!requiredItemRepository.existsById(id))
         {
-            throw new RuntimeException("Id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         requiredItem.setId(id);
         return  requiredItemRepository.save(requiredItem);
@@ -60,13 +61,13 @@ public class RequireditemService {
     public RequiredItem updateRequirements( Long id , RequiredItem requiredItem)
     {
         return requiredItemRepository.findById(id).map(existing->{
-            existing.setId(requiredItem.getId());
+
             existing.setUnit(requiredItem.getUnit());
             existing.setName(requiredItem.getName());
             existing.setDescription(requiredItem.getDescription());
             existing.setActive(requiredItem.getActive());
 
             return requiredItemRepository.save(existing);
-        }).orElseThrow(()->new RuntimeException("Id not found : "+id));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }

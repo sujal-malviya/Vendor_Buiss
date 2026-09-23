@@ -2,6 +2,7 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.Vendor;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorProfileRepository;
 import com.vendorhub.vendor_onboarding.repository.VendorRepository;
 import org.springframework.stereotype.Service;
@@ -33,14 +34,14 @@ public class Vendorservice {
 
     public VendorProfile getVendorProfileById(Long id)
     {
-        return vendorProfileRepository.findById(id).orElseThrow(()-> new RuntimeException("Id not found : "+id));
+        return vendorProfileRepository.findById(id).orElseThrow(()-> new VendorNotFoundException(id));
     }
 
     public void deleteVendorProfileById(Long id )
     {
         if(!vendorProfileRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorProfileRepository.deleteById(id);
     }
@@ -66,7 +67,7 @@ public class Vendorservice {
 
                     return vendorProfileRepository.save(existingProfile);
                 }
-        ).orElseThrow(()-> new RuntimeException("id not found : "+id));
+        ).orElseThrow(()-> new VendorNotFoundException(id));
 
 
     }

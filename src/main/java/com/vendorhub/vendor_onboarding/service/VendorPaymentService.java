@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.entity.VendorPaymentPlan;
+import com.vendorhub.vendor_onboarding.exception.VendorNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorPaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +33,7 @@ public class VendorPaymentService {
 
     public VendorPaymentPlan getVendorPaymentById( Long id)
     {
-        return vendorPaymentRepository.findById(id).orElseThrow(()->new RuntimeException("id not found : "+id));
+        return vendorPaymentRepository.findById(id).orElseThrow(()->new VendorNotFoundException(id));
     }
 
     public void deleteVendorPayment(Long id)
@@ -45,7 +46,7 @@ public class VendorPaymentService {
     {
         if(!vendorPaymentRepository.existsById(id))
         {
-            throw new RuntimeException("id not found : "+id);
+            throw new VendorNotFoundException(id);
         }
         vendorPaymentPlan.setId(id);
         return vendorPaymentRepository.save(vendorPaymentPlan);
@@ -55,12 +56,12 @@ public class VendorPaymentService {
     public VendorPaymentPlan updatedVendorPayments( Long id ,  VendorPaymentPlan vendorPaymentPlan)
     {
         return vendorPaymentRepository.findById(id).map(existingId->{
-            existingId.setId(vendorPaymentPlan.getId());
+
             existingId.setPrePayement(vendorPaymentPlan.getPrePayement());
             existingId.setPostPayment(vendorPaymentPlan.getPostPayment());
             existingId.setAdvancePayment(vendorPaymentPlan.getAdvancePayment());
 
             return vendorPaymentRepository.save(existingId);
-        }).orElseThrow(()->new RuntimeException("id not found : "+id));
+        }).orElseThrow(()->new VendorNotFoundException(id));
     }
 }
