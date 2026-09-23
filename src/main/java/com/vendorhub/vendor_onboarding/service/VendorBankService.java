@@ -12,11 +12,10 @@ import java.util.List;
 public class VendorBankService {
 
     private VendorBankRepository vendorBankRepository;
-    private VendorBankDetail vendorBankDetail;
-    VendorBankService(VendorBankDetail vendorBankDetail,VendorBankRepository vendorBankRepository)
+    VendorBankService(VendorBankRepository vendorBankRepository,VendorBankDetail vendorBankDetail)
     {
         this.vendorBankRepository=vendorBankRepository;
-        this.vendorBankDetail=vendorBankDetail;
+
     }
 
     public VendorBankDetail createVendorBankDetail(@RequestBody VendorBankDetail vendorBankDetail)
