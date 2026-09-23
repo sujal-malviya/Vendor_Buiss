@@ -3,10 +3,12 @@ package com.vendorhub.vendor_onboarding.service;
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
 import com.vendorhub.vendor_onboarding.repository.PackageRepository;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Service
 public class PackageDishService {
 
     private PackageDishRepository packageDishRepository;

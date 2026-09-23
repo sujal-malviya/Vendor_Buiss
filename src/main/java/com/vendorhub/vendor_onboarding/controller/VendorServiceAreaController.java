@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendor/service-area")
-public class VendorServiceAreaController {
+class VendorServiceAreaController {
 
     private VendorServiceAreaService vendorServiceAreaService;
 

@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Service
-class vendorServiceAreaService {
+public class VendorServiceAreaService {
 
     private VendorServiceRepository vendorServiceRepository;
 
-    vendorServiceAreaService(VendorServiceRepository vendorServiceRepository)
+    VendorServiceAreaService(VendorServiceRepository vendorServiceRepository)
     {
         this.vendorServiceRepository=vendorServiceRepository;
     }
