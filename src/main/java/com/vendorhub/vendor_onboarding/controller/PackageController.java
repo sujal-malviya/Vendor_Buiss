@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.MenuPackage;
+import com.vendorhub.vendor_onboarding.dto.PackageRequest;
+import com.vendorhub.vendor_onboarding.dto.PackageResponse;
 import com.vendorhub.vendor_onboarding.service.PackageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class PackageController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MenuPackage createPackage(@Valid @RequestBody MenuPackage menuPackage)
+    public PackageResponse createPackage(@Valid @RequestBody PackageRequest request)
     {
-        return packageService.createPackage(menuPackage);
+        return packageService.createPackage(request);
     }
 
     @GetMapping
-    public List<MenuPackage> getMyPackages()
+    public List<PackageResponse> getMyPackages()
     {
         return packageService.getMyPackages();
     }
 
     @GetMapping("/{id}")
-    public MenuPackage getPackageById(@PathVariable Long id)
+    public PackageResponse getPackageById(@PathVariable Long id)
     {
         return packageService.getPackageById(id);
     }
@@ -46,14 +47,14 @@ public class PackageController {
     }
 
     @PutMapping("/{id}")
-    public MenuPackage updatePackage(@PathVariable Long id, @Valid @RequestBody MenuPackage menuPackage)
+    public PackageResponse updatePackage(@PathVariable Long id, @Valid @RequestBody PackageRequest request)
     {
-        return packageService.updatePackage(id, menuPackage);
+        return packageService.updatePackage(id, request);
     }
 
     @PatchMapping("/{id}")
-    public MenuPackage patchPackage(@PathVariable Long id, @RequestBody MenuPackage menuPackage)
+    public PackageResponse patchPackage(@PathVariable Long id, @RequestBody PackageRequest request)
     {
-        return packageService.patchPackage(id, menuPackage);
+        return packageService.patchPackage(id, request);
     }
 }

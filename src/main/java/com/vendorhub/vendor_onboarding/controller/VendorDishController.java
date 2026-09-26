@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorDish;
+import com.vendorhub.vendor_onboarding.dto.VendorDishRequest;
+import com.vendorhub.vendor_onboarding.dto.VendorDishResponse;
 import com.vendorhub.vendor_onboarding.service.VendorDishService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,19 +23,19 @@ public class VendorDishController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorDish createVendorDish(@Valid @RequestBody VendorDish vendorDish)
+    public VendorDishResponse createVendorDish(@Valid @RequestBody VendorDishRequest request)
     {
-        return vendorDishService.createVendorDish(vendorDish);
+        return vendorDishService.createVendorDish(request);
     }
 
     @GetMapping
-    public List<VendorDish> getMyVendorDishes()
+    public List<VendorDishResponse> getMyVendorDishes()
     {
         return vendorDishService.getMyVendorDishes();
     }
 
     @GetMapping("/{id}")
-    public VendorDish getVendorDishById(@PathVariable Long id)
+    public VendorDishResponse getVendorDishById(@PathVariable Long id)
     {
         return vendorDishService.getVendorDishById(id);
     }
@@ -47,14 +48,14 @@ public class VendorDishController {
     }
 
     @PutMapping("/{id}")
-    public VendorDish updateVendorDish(@PathVariable Long id, @Valid @RequestBody VendorDish vendorDish)
+    public VendorDishResponse updateVendorDish(@PathVariable Long id, @Valid @RequestBody VendorDishRequest request)
     {
-        return vendorDishService.updateVendorDish(id, vendorDish);
+        return vendorDishService.updateVendorDish(id, request);
     }
 
     @PatchMapping("/{id}")
-    public VendorDish patchVendorDish(@PathVariable Long id, @RequestBody VendorDish vendorDish)
+    public VendorDishResponse patchVendorDish(@PathVariable Long id, @RequestBody VendorDishRequest request)
     {
-        return vendorDishService.patchVendorDish(id, vendorDish);
+        return vendorDishService.patchVendorDish(id, request);
     }
 }

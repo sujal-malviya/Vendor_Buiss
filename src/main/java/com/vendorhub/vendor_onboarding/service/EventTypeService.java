@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.EventTypeRequest;
+import com.vendorhub.vendor_onboarding.dto.EventTypeResponse;
 import com.vendorhub.vendor_onboarding.entity.EventType;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.EventTypeRepository;
@@ -17,40 +19,46 @@ public class EventTypeService {
         this.eventTypeRepository = eventTypeRepository;
     }
 
-    public EventType createEventType(EventType eventType)
+    public EventTypeResponse createEventType(EventTypeRequest request)
     {
-        eventType.setId(null);
-        return eventTypeRepository.save(eventType);
+        EventType eventType = new EventType();
+        request.applyTo(eventType);
+        return EventTypeResponse.from(eventTypeRepository.save(eventType));
     }
 
-    public List<EventType> getAllEventTypes()
+    public List<EventTypeResponse> getAllEventTypes()
     {
-        return eventTypeRepository.findAll();
+        return eventTypeRepository.findAll().stream()
+                .map(EventTypeResponse::from)
+                .toList();
     }
 
-    public EventType getEventTypeById(Long id)
+    public EventTypeResponse getEventTypeById(Long id)
     {
-        return eventTypeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event type", id));
+        return EventTypeResponse.from(findEventType(id));
     }
 
     public void deleteEventType(Long id)
     {
-        eventTypeRepository.delete(getEventTypeById(id));
+        eventTypeRepository.delete(findEventType(id));
     }
 
-    public EventType updateEventType(Long id, EventType eventType)
+    public EventTypeResponse updateEventType(Long id, EventTypeRequest request)
     {
-        getEventTypeById(id);
-        eventType.setId(id);
-        return eventTypeRepository.save(eventType);
+        EventType existing = findEventType(id);
+        request.applyTo(existing);
+        return EventTypeResponse.from(eventTypeRepository.save(existing));
     }
 
-    public EventType patchEventType(Long id, EventType eventType)
+    public EventTypeResponse patchEventType(Long id, EventTypeRequest request)
     {
-        EventType existing = getEventTypeById(id);
-        if (eventType.getName() != null) existing.setName(eventType.getName());
-        if (eventType.getDescription() != null) existing.setDescription(eventType.getDescription());
-        if (eventType.getActive() != null) existing.setActive(eventType.getActive());
-        return eventTypeRepository.save(existing);
+        EventType existing = findEventType(id);
+        request.patch(existing);
+        return EventTypeResponse.from(eventTypeRepository.save(existing));
+    }
+
+    private EventType findEventType(Long id)
+    {
+        return eventTypeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event type", id));
     }
 }

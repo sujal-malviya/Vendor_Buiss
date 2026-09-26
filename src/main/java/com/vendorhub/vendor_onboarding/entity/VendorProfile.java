@@ -1,6 +1,5 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -28,7 +27,6 @@ public class VendorProfile {
     // The login account that owns this profile. The server sets it from the JWT, never from the request body.
     @OneToOne
     @JoinColumn(name = "vendor_id", unique = true)
-    @JsonIgnore
     private Vendor vendor;
 
     @OneToOne(mappedBy = "vendorProfile", cascade = CascadeType.ALL)

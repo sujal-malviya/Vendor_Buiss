@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.VendorDishRequest;
+import com.vendorhub.vendor_onboarding.dto.VendorDishResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorDish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorDishRepository;
@@ -22,45 +24,54 @@ public class VendorDishService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorDish createVendorDish(VendorDish vendorDish)
+    public VendorDishResponse createVendorDish(VendorDishRequest request)
     {
-        vendorDish.setId(null);
+        VendorDish vendorDish = new VendorDish();
         vendorDish.setVendor(currentVendor.vendor());
-        vendorDish.setDish(dishService.getDishById(vendorDish.getDish().getId()));
-        return vendorDishRepository.save(vendorDish);
+        vendorDish.setDish(dishService.findDish(request.dishId()));
+        vendorDish.setPrice(request.price());
+        vendorDish.setAvailable(request.available());
+        return VendorDishResponse.from(vendorDishRepository.save(vendorDish));
     }
 
-    public List<VendorDish> getMyVendorDishes()
+    public List<VendorDishResponse> getMyVendorDishes()
     {
-        return vendorDishRepository.findByVendorId(currentVendor.id());
+        return vendorDishRepository.findByVendorId(currentVendor.id()).stream()
+                .map(VendorDishResponse::from)
+                .toList();
     }
 
-    public VendorDish getVendorDishById(Long id)
+    public VendorDishResponse getVendorDishById(Long id)
     {
-        return vendorDishRepository.findByIdAndVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor dish", id));
+        return VendorDishResponse.from(findOwned(id));
     }
 
     public void deleteVendorDish(Long id)
     {
-        vendorDishRepository.delete(getVendorDishById(id));
+        vendorDishRepository.delete(findOwned(id));
     }
 
-    public VendorDish updateVendorDish(Long id, VendorDish vendorDish)
+    public VendorDishResponse updateVendorDish(Long id, VendorDishRequest request)
     {
-        VendorDish existing = getVendorDishById(id);
-        existing.setDish(dishService.getDishById(vendorDish.getDish().getId()));
-        existing.setPrice(vendorDish.getPrice());
-        existing.setAvailable(vendorDish.getAvailable());
-        return vendorDishRepository.save(existing);
+        VendorDish existing = findOwned(id);
+        existing.setDish(dishService.findDish(request.dishId()));
+        existing.setPrice(request.price());
+        existing.setAvailable(request.available());
+        return VendorDishResponse.from(vendorDishRepository.save(existing));
     }
 
-    public VendorDish patchVendorDish(Long id, VendorDish vendorDish)
+    public VendorDishResponse patchVendorDish(Long id, VendorDishRequest request)
     {
-        VendorDish existing = getVendorDishById(id);
-        if (vendorDish.getDish() != null) existing.setDish(dishService.getDishById(vendorDish.getDish().getId()));
-        if (vendorDish.getPrice() != null) existing.setPrice(vendorDish.getPrice());
-        if (vendorDish.getAvailable() != null) existing.setAvailable(vendorDish.getAvailable());
-        return vendorDishRepository.save(existing);
+        VendorDish existing = findOwned(id);
+        if (request.dishId() != null) existing.setDish(dishService.findDish(request.dishId()));
+        if (request.price() != null) existing.setPrice(request.price());
+        if (request.available() != null) existing.setAvailable(request.available());
+        return VendorDishResponse.from(vendorDishRepository.save(existing));
+    }
+
+    private VendorDish findOwned(Long id)
+    {
+        return vendorDishRepository.findByIdAndVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor dish", id));
     }
 }

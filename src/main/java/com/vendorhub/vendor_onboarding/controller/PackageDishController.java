@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.PackageDish;
+import com.vendorhub.vendor_onboarding.dto.PackageDishRequest;
+import com.vendorhub.vendor_onboarding.dto.PackageDishResponse;
 import com.vendorhub.vendor_onboarding.service.PackageDishService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class PackageDishController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PackageDish createPackageDish(@Valid @RequestBody PackageDish packageDish)
+    public PackageDishResponse createPackageDish(@Valid @RequestBody PackageDishRequest request)
     {
-        return packageDishService.createPackageDish(packageDish);
+        return packageDishService.createPackageDish(request);
     }
 
     @GetMapping
-    public List<PackageDish> getMyPackageDishes()
+    public List<PackageDishResponse> getMyPackageDishes()
     {
         return packageDishService.getMyPackageDishes();
     }
 
     @GetMapping("/{id}")
-    public PackageDish getPackageDishById(@PathVariable Long id)
+    public PackageDishResponse getPackageDishById(@PathVariable Long id)
     {
         return packageDishService.getPackageDishById(id);
     }
@@ -46,14 +47,14 @@ public class PackageDishController {
     }
 
     @PutMapping("/{id}")
-    public PackageDish updatePackageDish(@PathVariable Long id, @Valid @RequestBody PackageDish packageDish)
+    public PackageDishResponse updatePackageDish(@PathVariable Long id, @Valid @RequestBody PackageDishRequest request)
     {
-        return packageDishService.updatePackageDish(id, packageDish);
+        return packageDishService.updatePackageDish(id, request);
     }
 
     @PatchMapping("/{id}")
-    public PackageDish patchPackageDish(@PathVariable Long id, @RequestBody PackageDish packageDish)
+    public PackageDishResponse patchPackageDish(@PathVariable Long id, @RequestBody PackageDishRequest request)
     {
-        return packageDishService.patchPackageDish(id, packageDish);
+        return packageDishService.patchPackageDish(id, request);
     }
 }

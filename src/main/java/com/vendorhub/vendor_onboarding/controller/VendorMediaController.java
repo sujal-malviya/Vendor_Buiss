@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorMedia;
+import com.vendorhub.vendor_onboarding.dto.MediaRequest;
+import com.vendorhub.vendor_onboarding.dto.MediaResponse;
 import com.vendorhub.vendor_onboarding.service.VendorMediaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class VendorMediaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorMedia createMedia(@Valid @RequestBody VendorMedia media)
+    public MediaResponse createMedia(@Valid @RequestBody MediaRequest request)
     {
-        return vendorMediaService.createMedia(media);
+        return vendorMediaService.createMedia(request);
     }
 
     @GetMapping
-    public List<VendorMedia> getMyMedia()
+    public List<MediaResponse> getMyMedia()
     {
         return vendorMediaService.getMyMedia();
     }
 
     @GetMapping("/{id}")
-    public VendorMedia getMediaById(@PathVariable Long id)
+    public MediaResponse getMediaById(@PathVariable Long id)
     {
         return vendorMediaService.getMediaById(id);
     }
@@ -46,14 +47,14 @@ public class VendorMediaController {
     }
 
     @PutMapping("/{id}")
-    public VendorMedia updateMedia(@PathVariable Long id, @Valid @RequestBody VendorMedia media)
+    public MediaResponse updateMedia(@PathVariable Long id, @Valid @RequestBody MediaRequest request)
     {
-        return vendorMediaService.updateMedia(id, media);
+        return vendorMediaService.updateMedia(id, request);
     }
 
     @PatchMapping("/{id}")
-    public VendorMedia patchMedia(@PathVariable Long id, @RequestBody VendorMedia media)
+    public MediaResponse patchMedia(@PathVariable Long id, @RequestBody MediaRequest request)
     {
-        return vendorMediaService.patchMedia(id, media);
+        return vendorMediaService.patchMedia(id, request);
     }
 }

@@ -52,8 +52,9 @@ Organized by domain, to be built and tested one at a time:
 com.vendorhub.vendor_onboarding
 ├── VendorOnboardingApplication.java
 ├── config/       → SecurityConfig (JWT encoder/decoder, access rules)
-├── controller/   → REST endpoints (AuthController, VendorController, ...)
-├── service/      → business logic, JwtService
+├── controller/   → REST endpoints (AuthController, VendorController, ...) — only speak DTOs
+├── dto/          → XxxRequest (what clients send) and XxxResponse (what clients get back)
+├── service/      → business logic, JwtService — converts DTO ⇄ entity
 ├── repository/   → Spring Data JPA repositories
 ├── entity/       → JPA entities (Vendor, VendorProfile, ...)
 ├── security/     → CurrentVendor (who is logged in)
@@ -179,6 +180,30 @@ Content-Type: application/json
   "ifscCode": "HDFC0001234"
 }
 ```
+Response — the account number is never sent back in full:
+```json
+{ "id": 1, "accountHolderName": "Spice Caterers", "maskedAccountNumber": "XXXXXX7890", "ifscCode": "HDFC0001234" }
+```
+
+**Put a dish in a package** (send plain ids)
+```
+POST http://localhost:8080/api/vendor/package-dishes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "packageId": 3, "dishId": 5, "quantity": 2 }
+```
+
+**Offer a catalog dish at your own price**
+```
+POST http://localhost:8080/api/vendor/dishes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "dishId": 5, "price": 180, "available": true }
+```
+
+**Demo data:** `scripts/demo-data.sql` adds 6 demo vendors (password `password123`) with data in every table.
 
 ## Documentation
 

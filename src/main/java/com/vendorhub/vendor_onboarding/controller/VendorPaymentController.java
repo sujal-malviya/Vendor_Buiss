@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorPaymentPlan;
+import com.vendorhub.vendor_onboarding.dto.PaymentPlanRequest;
+import com.vendorhub.vendor_onboarding.dto.PaymentPlanResponse;
 import com.vendorhub.vendor_onboarding.service.VendorPaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class VendorPaymentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorPaymentPlan createPaymentPlan(@Valid @RequestBody VendorPaymentPlan paymentPlan)
+    public PaymentPlanResponse createPaymentPlan(@Valid @RequestBody PaymentPlanRequest request)
     {
-        return vendorPaymentService.createPaymentPlan(paymentPlan);
+        return vendorPaymentService.createPaymentPlan(request);
     }
 
     @GetMapping
-    public List<VendorPaymentPlan> getMyPaymentPlans()
+    public List<PaymentPlanResponse> getMyPaymentPlans()
     {
         return vendorPaymentService.getMyPaymentPlans();
     }
 
     @GetMapping("/{id}")
-    public VendorPaymentPlan getPaymentPlanById(@PathVariable Long id)
+    public PaymentPlanResponse getPaymentPlanById(@PathVariable Long id)
     {
         return vendorPaymentService.getPaymentPlanById(id);
     }
@@ -46,14 +47,14 @@ public class VendorPaymentController {
     }
 
     @PutMapping("/{id}")
-    public VendorPaymentPlan updatePaymentPlan(@PathVariable Long id, @Valid @RequestBody VendorPaymentPlan paymentPlan)
+    public PaymentPlanResponse updatePaymentPlan(@PathVariable Long id, @Valid @RequestBody PaymentPlanRequest request)
     {
-        return vendorPaymentService.updatePaymentPlan(id, paymentPlan);
+        return vendorPaymentService.updatePaymentPlan(id, request);
     }
 
     @PatchMapping("/{id}")
-    public VendorPaymentPlan patchPaymentPlan(@PathVariable Long id, @RequestBody VendorPaymentPlan paymentPlan)
+    public PaymentPlanResponse patchPaymentPlan(@PathVariable Long id, @RequestBody PaymentPlanRequest request)
     {
-        return vendorPaymentService.patchPaymentPlan(id, paymentPlan);
+        return vendorPaymentService.patchPaymentPlan(id, request);
     }
 }

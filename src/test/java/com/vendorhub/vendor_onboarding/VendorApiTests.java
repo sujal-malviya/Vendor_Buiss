@@ -60,7 +60,7 @@ class VendorApiTests {
         String alice = register();
         createProfile(alice);
         long bankId = id(call(alice, post("/api/vendor/bank-details"),
-                "{\"accountNumber\":\"111\",\"accountHolderName\":\"Alice\",\"ifscCode\":\"HDFC0001234\"}")
+                "{\"accountNumber\":\"50100011112221\",\"accountHolderName\":\"Alice\",\"ifscCode\":\"HDFC0001234\"}")
                 .andExpect(status().isCreated()));
 
         String bob = register();
@@ -71,7 +71,42 @@ class VendorApiTests {
 
         call(alice, get("/api/vendor/bank-details/" + bankId), null)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accountNumber").value("111"));
+                .andExpect(jsonPath("$.accountHolderName").value("Alice"));
+    }
+
+    @Test
+    void bankDetailResponseMasksTheAccountNumber() throws Exception
+    {
+        String vendor = register();
+        createProfile(vendor);
+        call(vendor, post("/api/vendor/bank-details"),
+                "{\"accountNumber\":\"50100011112221\",\"accountHolderName\":\"V\",\"ifscCode\":\"HDFC0001234\"}")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.maskedAccountNumber").value("XXXXXXXXXX2221"))
+                .andExpect(jsonPath("$.accountNumber").doesNotExist())
+                .andExpect(content().string(not(containsString("50100011112221"))));
+    }
+
+    @Test
+    void clientCannotChooseIdOrOwnerBecauseTheRequestDtoHasNoSuchFields() throws Exception
+    {
+        String alice = register();
+        createProfile(alice);
+        long aliceBankId = id(call(alice, post("/api/vendor/bank-details"),
+                "{\"accountNumber\":\"50100011112221\",\"accountHolderName\":\"Alice\",\"ifscCode\":\"HDFC0001234\"}"));
+
+        // Bob tries to overwrite Alice's row by sending her id and a profile in the body
+        String bob = register();
+        long bobProfileId = createProfile(bob);
+        long bobBankId = id(call(bob, post("/api/vendor/bank-details"),
+                "{\"id\":" + aliceBankId + ",\"vendorProfile\":{\"id\":1},\"accountNumber\":\"99999999\","
+                        + "\"accountHolderName\":\"Bob\",\"ifscCode\":\"SBIN0000001\"}")
+                .andExpect(status().isCreated()));
+
+        org.junit.jupiter.api.Assertions.assertNotEquals(aliceBankId, bobBankId);
+        call(alice, get("/api/vendor/bank-details/" + aliceBankId), null)
+                .andExpect(jsonPath("$.accountHolderName").value("Alice"));
+        call(bob, get("/api/vendor/profile/" + bobProfileId), null).andExpect(status().isOk());
     }
 
     @Test
@@ -148,7 +183,7 @@ class VendorApiTests {
         String vendor = register();
         long packageId = id(call(vendor, post("/api/vendor/packages"), "{\"name\":\"Silver\"}"));
         long packageDishId = id(call(vendor, post("/api/vendor/package-dishes"),
-                "{\"menuPackage\":{\"id\":" + packageId + "},\"dish\":{\"id\":" + dishId + "},\"quantity\":2}")
+                "{\"packageId\":" + packageId + ",\"dishId\":" + dishId + ",\"quantity\":2}")
                 .andExpect(status().isCreated()));
 
         call(vendor, delete("/api/vendor/packages/" + packageId), null).andExpect(status().isNoContent());
@@ -166,7 +201,7 @@ class VendorApiTests {
 
         String bob = register();
         call(bob, post("/api/vendor/package-dishes"),
-                "{\"menuPackage\":{\"id\":" + alicePackage + "},\"dish\":{\"id\":" + dishId + "},\"quantity\":1}")
+                "{\"packageId\":" + alicePackage + ",\"dishId\":" + dishId + ",\"quantity\":1}")
                 .andExpect(status().isNotFound());
     }
 

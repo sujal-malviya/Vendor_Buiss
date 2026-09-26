@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.MediaRequest;
+import com.vendorhub.vendor_onboarding.dto.MediaResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorMedia;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -23,47 +25,53 @@ public class VendorMediaService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorMedia createMedia(VendorMedia media)
+    public MediaResponse createMedia(MediaRequest request)
     {
         VendorProfile profile = currentVendor.profile();
         if (vendorMediaRepository.existsByVendorProfileId(profile.getId()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Media already exists. Use PUT or PATCH to change it.");
         }
-        media.setId(null);
+        VendorMedia media = new VendorMedia();
+        request.applyTo(media);
         media.setVendorProfile(profile);
-        return vendorMediaRepository.save(media);
+        return MediaResponse.from(vendorMediaRepository.save(media));
     }
 
-    public List<VendorMedia> getMyMedia()
+    public List<MediaResponse> getMyMedia()
     {
-        return vendorMediaRepository.findByVendorProfileVendorId(currentVendor.id());
+        return vendorMediaRepository.findByVendorProfileVendorId(currentVendor.id()).stream()
+                .map(MediaResponse::from)
+                .toList();
     }
 
-    public VendorMedia getMediaById(Long id)
+    public MediaResponse getMediaById(Long id)
     {
-        return vendorMediaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Media", id));
+        return MediaResponse.from(findOwned(id));
     }
 
     public void deleteMedia(Long id)
     {
-        vendorMediaRepository.delete(getMediaById(id));
+        vendorMediaRepository.delete(findOwned(id));
     }
 
-    public VendorMedia updateMedia(Long id, VendorMedia media)
+    public MediaResponse updateMedia(Long id, MediaRequest request)
     {
-        VendorMedia existing = getMediaById(id);
-        media.setId(existing.getId());
-        media.setVendorProfile(existing.getVendorProfile());
-        return vendorMediaRepository.save(media);
+        VendorMedia existing = findOwned(id);
+        request.applyTo(existing);
+        return MediaResponse.from(vendorMediaRepository.save(existing));
     }
 
-    public VendorMedia patchMedia(Long id, VendorMedia media)
+    public MediaResponse patchMedia(Long id, MediaRequest request)
     {
-        VendorMedia existing = getMediaById(id);
-        if (media.getImage() != null) existing.setImage(media.getImage());
-        if (media.getVideo() != null) existing.setVideo(media.getVideo());
-        return vendorMediaRepository.save(existing);
+        VendorMedia existing = findOwned(id);
+        request.patch(existing);
+        return MediaResponse.from(vendorMediaRepository.save(existing));
+    }
+
+    private VendorMedia findOwned(Long id)
+    {
+        return vendorMediaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Media", id));
     }
 }

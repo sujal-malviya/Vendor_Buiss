@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.BusinessInfoRequest;
+import com.vendorhub.vendor_onboarding.dto.BusinessInfoResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorBusinessInfo;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -23,54 +25,56 @@ public class VendorBusinessService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorBusinessInfo createBusinessInfo(VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse createBusinessInfo(BusinessInfoRequest request)
     {
         VendorProfile profile = currentVendor.profile();
         if (vendorBusinessInfoRepository.existsByVendorProfileId(profile.getId()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Business info already exists. Use PUT or PATCH to change it.");
         }
-        businessInfo.setId(null);
+        VendorBusinessInfo businessInfo = new VendorBusinessInfo();
+        request.applyTo(businessInfo);
         businessInfo.setVendorProfile(profile);
-        return vendorBusinessInfoRepository.save(businessInfo);
+        return BusinessInfoResponse.from(vendorBusinessInfoRepository.save(businessInfo));
     }
 
-    public List<VendorBusinessInfo> getMyBusinessInfo()
+    public List<BusinessInfoResponse> getMyBusinessInfo()
     {
-        return vendorBusinessInfoRepository.findByVendorProfileVendorId(currentVendor.id());
+        return vendorBusinessInfoRepository.findByVendorProfileVendorId(currentVendor.id()).stream()
+                .map(BusinessInfoResponse::from)
+                .toList();
     }
 
-    public VendorBusinessInfo getBusinessInfoById(Long id)
+    public BusinessInfoResponse getBusinessInfoById(Long id)
     {
-        return vendorBusinessInfoRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Business info", id));
+        return BusinessInfoResponse.from(findOwned(id));
     }
 
     public void deleteBusinessInfo(Long id)
     {
-        VendorBusinessInfo existing = getBusinessInfoById(id);
+        VendorBusinessInfo existing = findOwned(id);
         // The profile cascades ALL to its business info; unlink it first or saving the profile would bring it back
         existing.getVendorProfile().setBusinessInfo(null);
         vendorBusinessInfoRepository.delete(existing);
     }
 
-    public VendorBusinessInfo updateBusinessInfo(Long id, VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse updateBusinessInfo(Long id, BusinessInfoRequest request)
     {
-        VendorBusinessInfo existing = getBusinessInfoById(id);
-        businessInfo.setId(existing.getId());
-        businessInfo.setVendorProfile(existing.getVendorProfile());
-        return vendorBusinessInfoRepository.save(businessInfo);
+        VendorBusinessInfo existing = findOwned(id);
+        request.applyTo(existing);
+        return BusinessInfoResponse.from(vendorBusinessInfoRepository.save(existing));
     }
 
-    public VendorBusinessInfo patchBusinessInfo(Long id, VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse patchBusinessInfo(Long id, BusinessInfoRequest request)
     {
-        VendorBusinessInfo existing = getBusinessInfoById(id);
-        if (businessInfo.getName() != null) existing.setName(businessInfo.getName());
-        if (businessInfo.getContactDetail() != null) existing.setContactDetail(businessInfo.getContactDetail());
-        if (businessInfo.getAddress() != null) existing.setAddress(businessInfo.getAddress());
-        if (businessInfo.getGstNumber() != null) existing.setGstNumber(businessInfo.getGstNumber());
-        if (businessInfo.getFssaiNumber() != null) existing.setFssaiNumber(businessInfo.getFssaiNumber());
-        if (businessInfo.getYearsInBusiness() != null) existing.setYearsInBusiness(businessInfo.getYearsInBusiness());
-        return vendorBusinessInfoRepository.save(existing);
+        VendorBusinessInfo existing = findOwned(id);
+        request.patch(existing);
+        return BusinessInfoResponse.from(vendorBusinessInfoRepository.save(existing));
+    }
+
+    private VendorBusinessInfo findOwned(Long id)
+    {
+        return vendorBusinessInfoRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Business info", id));
     }
 }

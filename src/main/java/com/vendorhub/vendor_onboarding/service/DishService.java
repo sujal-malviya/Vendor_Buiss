@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.DishRequest;
+import com.vendorhub.vendor_onboarding.dto.DishResponse;
 import com.vendorhub.vendor_onboarding.entity.Dish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.DishRepository;
@@ -17,44 +19,47 @@ public class DishService {
         this.dishRepository = dishRepository;
     }
 
-    public Dish createDish(Dish dish)
+    public DishResponse createDish(DishRequest request)
     {
-        dish.setId(null);   // never let the body pick the id, or a POST could overwrite an existing row
-        return dishRepository.save(dish);
+        Dish dish = new Dish();
+        request.applyTo(dish);
+        return DishResponse.from(dishRepository.save(dish));
     }
 
-    public List<Dish> getAllDishes()
+    public List<DishResponse> getAllDishes()
     {
-        return dishRepository.findAll();
+        return dishRepository.findAll().stream()
+                .map(DishResponse::from)
+                .toList();
     }
 
-    public Dish getDishById(Long id)
+    public DishResponse getDishById(Long id)
     {
-        return dishRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Dish", id));
+        return DishResponse.from(findDish(id));
     }
 
     public void deleteDish(Long id)
     {
-        dishRepository.delete(getDishById(id));
+        dishRepository.delete(findDish(id));
     }
 
-    public Dish updateDish(Long id, Dish dish)
+    public DishResponse updateDish(Long id, DishRequest request)
     {
-        getDishById(id);
-        dish.setId(id);
-        return dishRepository.save(dish);
+        Dish existing = findDish(id);
+        request.applyTo(existing);
+        return DishResponse.from(dishRepository.save(existing));
     }
 
-    // PATCH: only change the fields that were sent
-    public Dish patchDish(Long id, Dish dish)
+    public DishResponse patchDish(Long id, DishRequest request)
     {
-        Dish existing = getDishById(id);
-        if (dish.getName() != null) existing.setName(dish.getName());
-        if (dish.getDescription() != null) existing.setDescription(dish.getDescription());
-        if (dish.getCategory() != null) existing.setCategory(dish.getCategory());
-        if (dish.getCuisine() != null) existing.setCuisine(dish.getCuisine());
-        if (dish.getVegetarian() != null) existing.setVegetarian(dish.getVegetarian());
-        if (dish.getActive() != null) existing.setActive(dish.getActive());
-        return dishRepository.save(existing);
+        Dish existing = findDish(id);
+        request.patch(existing);
+        return DishResponse.from(dishRepository.save(existing));
+    }
+
+    // Public because VendorDishService and PackageDishService need the entity to link to it
+    public Dish findDish(Long id)
+    {
+        return dishRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Dish", id));
     }
 }

@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.RequiredItem;
+import com.vendorhub.vendor_onboarding.dto.RequiredItemRequest;
+import com.vendorhub.vendor_onboarding.dto.RequiredItemResponse;
 import com.vendorhub.vendor_onboarding.service.RequiredItemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,19 +23,19 @@ public class RequiredItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public RequiredItem createRequiredItem(@Valid @RequestBody RequiredItem requiredItem)
+    public RequiredItemResponse createRequiredItem(@Valid @RequestBody RequiredItemRequest request)
     {
-        return requiredItemService.createRequiredItem(requiredItem);
+        return requiredItemService.createRequiredItem(request);
     }
 
     @GetMapping
-    public List<RequiredItem> getAllRequiredItems()
+    public List<RequiredItemResponse> getAllRequiredItems()
     {
         return requiredItemService.getAllRequiredItems();
     }
 
     @GetMapping("/{id}")
-    public RequiredItem getRequiredItemById(@PathVariable Long id)
+    public RequiredItemResponse getRequiredItemById(@PathVariable Long id)
     {
         return requiredItemService.getRequiredItemById(id);
     }
@@ -47,14 +48,14 @@ public class RequiredItemController {
     }
 
     @PutMapping("/{id}")
-    public RequiredItem updateRequiredItem(@PathVariable Long id, @Valid @RequestBody RequiredItem requiredItem)
+    public RequiredItemResponse updateRequiredItem(@PathVariable Long id, @Valid @RequestBody RequiredItemRequest request)
     {
-        return requiredItemService.updateRequiredItem(id, requiredItem);
+        return requiredItemService.updateRequiredItem(id, request);
     }
 
     @PatchMapping("/{id}")
-    public RequiredItem patchRequiredItem(@PathVariable Long id, @RequestBody RequiredItem requiredItem)
+    public RequiredItemResponse patchRequiredItem(@PathVariable Long id, @RequestBody RequiredItemRequest request)
     {
-        return requiredItemService.patchRequiredItem(id, requiredItem);
+        return requiredItemService.patchRequiredItem(id, request);
     }
 }

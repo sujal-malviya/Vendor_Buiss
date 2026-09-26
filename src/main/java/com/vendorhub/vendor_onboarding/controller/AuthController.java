@@ -1,13 +1,12 @@
 package com.vendorhub.vendor_onboarding.controller;
 
+import com.vendorhub.vendor_onboarding.dto.AuthResponse;
+import com.vendorhub.vendor_onboarding.dto.LoginRequest;
+import com.vendorhub.vendor_onboarding.dto.RegisterRequest;
 import com.vendorhub.vendor_onboarding.service.JwtService;
 import com.vendorhub.vendor_onboarding.repository.VendorRepository;
 import com.vendorhub.vendor_onboarding.entity.Vendor;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -81,17 +80,5 @@ public class AuthController {
 
 	private static boolean isBlank(String value) {
 		return value == null || value.isBlank();
-	}
-
-	public record RegisterRequest(
-		@Email(message = "email is not valid") String email,
-		@Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "phone must be 10 to 15 digits") String phone,
-		@NotBlank @Size(min = 8, message = "password must be at least 8 characters") String password) {
-	}
-
-	public record LoginRequest(@NotBlank String identifier, @NotBlank String password) {
-	}
-
-	public record AuthResponse(String token) {
 	}
 }

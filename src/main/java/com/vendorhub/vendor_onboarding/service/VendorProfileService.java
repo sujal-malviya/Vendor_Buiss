@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.VendorProfileRequest;
+import com.vendorhub.vendor_onboarding.dto.VendorProfileResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorBusinessInfo;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -45,40 +47,43 @@ public class VendorProfileService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorProfile createProfile(VendorProfile vendorProfile)
+    public VendorProfileResponse createProfile(VendorProfileRequest request)
     {
         if (vendorProfileRepository.existsByVendorId(currentVendor.id()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have a vendor profile. Use PUT or PATCH to change it.");
         }
-        vendorProfile.setId(null);
-        vendorProfile.setVendor(currentVendor.vendor());
-        VendorBusinessInfo businessInfo = vendorProfile.getBusinessInfo();
-        if (businessInfo != null)
+        VendorProfile profile = new VendorProfile();
+        request.applyTo(profile);
+        profile.setVendor(currentVendor.vendor());
+        if (request.businessInfo() != null)
         {
-            businessInfo.setId(null);
-            businessInfo.setVendorProfile(vendorProfile);
+            VendorBusinessInfo businessInfo = new VendorBusinessInfo();
+            request.businessInfo().applyTo(businessInfo);
+            businessInfo.setVendorProfile(profile);
+            profile.setBusinessInfo(businessInfo);
         }
-        return vendorProfileRepository.save(vendorProfile);
+        return VendorProfileResponse.from(vendorProfileRepository.save(profile));
     }
 
     // A vendor has at most one profile, so this list has 0 or 1 items
-    public List<VendorProfile> getMyProfiles()
+    public List<VendorProfileResponse> getMyProfiles()
     {
-        return vendorProfileRepository.findByVendorId(currentVendor.id()).stream().toList();
+        return vendorProfileRepository.findByVendorId(currentVendor.id()).stream()
+                .map(VendorProfileResponse::from)
+                .toList();
     }
 
-    public VendorProfile getProfileById(Long id)
+    public VendorProfileResponse getProfileById(Long id)
     {
-        return vendorProfileRepository.findByIdAndVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Vendor profile", id));
+        return VendorProfileResponse.from(findOwned(id));
     }
 
     // Deletes the profile and every section that belongs to it, so no foreign key blocks the delete
     @Transactional
     public void deleteProfile(Long id)
     {
-        VendorProfile profile = getProfileById(id);
+        VendorProfile profile = findOwned(id);
         vendorBankRepository.deleteByVendorProfileId(profile.getId());
         vendorMediaRepository.deleteByVendorProfileId(profile.getId());
         vendorPaymentRepository.deleteByVendorProfileId(profile.getId());
@@ -88,19 +93,23 @@ public class VendorProfileService {
     }
 
     // Business info has its own endpoint (/api/vendor/business-info), so PUT only replaces the profile's own fields
-    public VendorProfile updateProfile(Long id, VendorProfile vendorProfile)
+    public VendorProfileResponse updateProfile(Long id, VendorProfileRequest request)
     {
-        VendorProfile existing = getProfileById(id);
-        existing.setName(vendorProfile.getName());
-        existing.setAddress(vendorProfile.getAddress());
-        return vendorProfileRepository.save(existing);
+        VendorProfile existing = findOwned(id);
+        request.applyTo(existing);
+        return VendorProfileResponse.from(vendorProfileRepository.save(existing));
     }
 
-    public VendorProfile patchProfile(Long id, VendorProfile vendorProfile)
+    public VendorProfileResponse patchProfile(Long id, VendorProfileRequest request)
     {
-        VendorProfile existing = getProfileById(id);
-        if (vendorProfile.getName() != null) existing.setName(vendorProfile.getName());
-        if (vendorProfile.getAddress() != null) existing.setAddress(vendorProfile.getAddress());
-        return vendorProfileRepository.save(existing);
+        VendorProfile existing = findOwned(id);
+        request.patch(existing);
+        return VendorProfileResponse.from(vendorProfileRepository.save(existing));
+    }
+
+    private VendorProfile findOwned(Long id)
+    {
+        return vendorProfileRepository.findByIdAndVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor profile", id));
     }
 }

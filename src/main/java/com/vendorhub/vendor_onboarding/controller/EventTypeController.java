@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.EventType;
+import com.vendorhub.vendor_onboarding.dto.EventTypeRequest;
+import com.vendorhub.vendor_onboarding.dto.EventTypeResponse;
 import com.vendorhub.vendor_onboarding.service.EventTypeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,19 +23,19 @@ public class EventTypeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EventType createEventType(@Valid @RequestBody EventType eventType)
+    public EventTypeResponse createEventType(@Valid @RequestBody EventTypeRequest request)
     {
-        return eventTypeService.createEventType(eventType);
+        return eventTypeService.createEventType(request);
     }
 
     @GetMapping
-    public List<EventType> getAllEventTypes()
+    public List<EventTypeResponse> getAllEventTypes()
     {
         return eventTypeService.getAllEventTypes();
     }
 
     @GetMapping("/{id}")
-    public EventType getEventTypeById(@PathVariable Long id)
+    public EventTypeResponse getEventTypeById(@PathVariable Long id)
     {
         return eventTypeService.getEventTypeById(id);
     }
@@ -47,14 +48,14 @@ public class EventTypeController {
     }
 
     @PutMapping("/{id}")
-    public EventType updateEventType(@PathVariable Long id, @Valid @RequestBody EventType eventType)
+    public EventTypeResponse updateEventType(@PathVariable Long id, @Valid @RequestBody EventTypeRequest request)
     {
-        return eventTypeService.updateEventType(id, eventType);
+        return eventTypeService.updateEventType(id, request);
     }
 
     @PatchMapping("/{id}")
-    public EventType patchEventType(@PathVariable Long id, @RequestBody EventType eventType)
+    public EventTypeResponse patchEventType(@PathVariable Long id, @RequestBody EventTypeRequest request)
     {
-        return eventTypeService.patchEventType(id, eventType);
+        return eventTypeService.patchEventType(id, request);
     }
 }

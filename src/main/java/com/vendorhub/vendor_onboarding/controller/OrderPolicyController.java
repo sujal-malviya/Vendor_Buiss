@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.OrderPolicies;
+import com.vendorhub.vendor_onboarding.dto.OrderPolicyRequest;
+import com.vendorhub.vendor_onboarding.dto.OrderPolicyResponse;
 import com.vendorhub.vendor_onboarding.service.OrderPolicyService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class OrderPolicyController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderPolicies createOrderPolicy(@Valid @RequestBody OrderPolicies orderPolicies)
+    public OrderPolicyResponse createOrderPolicy(@Valid @RequestBody OrderPolicyRequest request)
     {
-        return orderPolicyService.createOrderPolicy(orderPolicies);
+        return orderPolicyService.createOrderPolicy(request);
     }
 
     @GetMapping
-    public List<OrderPolicies> getMyOrderPolicies()
+    public List<OrderPolicyResponse> getMyOrderPolicies()
     {
         return orderPolicyService.getMyOrderPolicies();
     }
 
     @GetMapping("/{id}")
-    public OrderPolicies getOrderPolicyById(@PathVariable Long id)
+    public OrderPolicyResponse getOrderPolicyById(@PathVariable Long id)
     {
         return orderPolicyService.getOrderPolicyById(id);
     }
@@ -46,14 +47,14 @@ public class OrderPolicyController {
     }
 
     @PutMapping("/{id}")
-    public OrderPolicies updateOrderPolicy(@PathVariable Long id, @Valid @RequestBody OrderPolicies orderPolicies)
+    public OrderPolicyResponse updateOrderPolicy(@PathVariable Long id, @Valid @RequestBody OrderPolicyRequest request)
     {
-        return orderPolicyService.updateOrderPolicy(id, orderPolicies);
+        return orderPolicyService.updateOrderPolicy(id, request);
     }
 
     @PatchMapping("/{id}")
-    public OrderPolicies patchOrderPolicy(@PathVariable Long id, @RequestBody OrderPolicies orderPolicies)
+    public OrderPolicyResponse patchOrderPolicy(@PathVariable Long id, @RequestBody OrderPolicyRequest request)
     {
-        return orderPolicyService.patchOrderPolicy(id, orderPolicies);
+        return orderPolicyService.patchOrderPolicy(id, request);
     }
 }

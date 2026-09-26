@@ -1,9 +1,10 @@
 package com.vendorhub.vendor_onboarding.controller;
 
 import java.util.List;
-import java.util.Map;
 
-import com.vendorhub.vendor_onboarding.entity.VendorProfile;
+import com.vendorhub.vendor_onboarding.dto.MeResponse;
+import com.vendorhub.vendor_onboarding.dto.VendorProfileRequest;
+import com.vendorhub.vendor_onboarding.dto.VendorProfileResponse;
 import com.vendorhub.vendor_onboarding.service.VendorProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,29 +23,27 @@ public class VendorController {
         this.vendorProfileService = vendorProfileService;
     }
 
-	@GetMapping("/me")
-	Map<String, Object> me(@AuthenticationPrincipal Jwt jwt) {
-		return Map.of(
-			"vendorId", jwt.getSubject(),
-			"identifier", jwt.getClaimAsString("identifier"),
-			"tokenExpiresAt", jwt.getExpiresAt().toString());
-	}
+    @GetMapping("/me")
+    public MeResponse me(@AuthenticationPrincipal Jwt jwt)
+    {
+        return MeResponse.from(jwt);
+    }
 
     @PostMapping("/profile")
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorProfile createProfile(@Valid @RequestBody VendorProfile vendorProfile)
+    public VendorProfileResponse createProfile(@Valid @RequestBody VendorProfileRequest request)
     {
-        return vendorProfileService.createProfile(vendorProfile);
+        return vendorProfileService.createProfile(request);
     }
 
     @GetMapping("/profile")
-    public List<VendorProfile> getMyProfiles()
+    public List<VendorProfileResponse> getMyProfiles()
     {
         return vendorProfileService.getMyProfiles();
     }
 
     @GetMapping("/profile/{id}")
-    public VendorProfile getProfileById(@PathVariable Long id)
+    public VendorProfileResponse getProfileById(@PathVariable Long id)
     {
         return vendorProfileService.getProfileById(id);
     }
@@ -57,14 +56,14 @@ public class VendorController {
     }
 
     @PutMapping("/profile/{id}")
-    public VendorProfile updateProfile(@PathVariable Long id, @Valid @RequestBody VendorProfile vendorProfile)
+    public VendorProfileResponse updateProfile(@PathVariable Long id, @Valid @RequestBody VendorProfileRequest request)
     {
-        return vendorProfileService.updateProfile(id, vendorProfile);
+        return vendorProfileService.updateProfile(id, request);
     }
 
     @PatchMapping("/profile/{id}")
-    public VendorProfile patchProfile(@PathVariable Long id, @RequestBody VendorProfile vendorProfile)
+    public VendorProfileResponse patchProfile(@PathVariable Long id, @RequestBody VendorProfileRequest request)
     {
-        return vendorProfileService.patchProfile(id, vendorProfile);
+        return vendorProfileService.patchProfile(id, request);
     }
 }

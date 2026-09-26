@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.PackageDishRequest;
+import com.vendorhub.vendor_onboarding.dto.PackageDishResponse;
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
@@ -25,49 +27,54 @@ public class PackageDishService {
         this.currentVendor = currentVendor;
     }
 
-    public PackageDish createPackageDish(PackageDish packageDish)
+    public PackageDishResponse createPackageDish(PackageDishRequest request)
     {
-        packageDish.setId(null);
-        // Load the real rows: the package must belong to this vendor, and both must exist
-        packageDish.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
-        packageDish.setDish(dishService.getDishById(packageDish.getDish().getId()));
-        return packageDishRepository.save(packageDish);
+        PackageDish packageDish = new PackageDish();
+        // Load the real rows from the ids: the package must belong to this vendor, and both must exist
+        packageDish.setMenuPackage(packageService.findOwnedPackage(request.packageId()));
+        packageDish.setDish(dishService.findDish(request.dishId()));
+        packageDish.setQuantity(request.quantity());
+        return PackageDishResponse.from(packageDishRepository.save(packageDish));
     }
 
-    public List<PackageDish> getMyPackageDishes()
+    public List<PackageDishResponse> getMyPackageDishes()
     {
-        return packageDishRepository.findByMenuPackageVendorId(currentVendor.id());
+        return packageDishRepository.findByMenuPackageVendorId(currentVendor.id()).stream()
+                .map(PackageDishResponse::from)
+                .toList();
     }
 
-    public PackageDish getPackageDishById(Long id)
+    public PackageDishResponse getPackageDishById(Long id)
     {
-        return packageDishRepository.findByIdAndMenuPackageVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Package dish", id));
+        return PackageDishResponse.from(findOwned(id));
     }
 
     public void deletePackageDish(Long id)
     {
-        packageDishRepository.delete(getPackageDishById(id));
+        packageDishRepository.delete(findOwned(id));
     }
 
-    public PackageDish updatePackageDish(Long id, PackageDish packageDish)
+    public PackageDishResponse updatePackageDish(Long id, PackageDishRequest request)
     {
-        PackageDish existing = getPackageDishById(id);
-        existing.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
-        existing.setDish(dishService.getDishById(packageDish.getDish().getId()));
-        existing.setQuantity(packageDish.getQuantity());
-        return packageDishRepository.save(existing);
+        PackageDish existing = findOwned(id);
+        existing.setMenuPackage(packageService.findOwnedPackage(request.packageId()));
+        existing.setDish(dishService.findDish(request.dishId()));
+        existing.setQuantity(request.quantity());
+        return PackageDishResponse.from(packageDishRepository.save(existing));
     }
 
-    public PackageDish patchPackageDish(Long id, PackageDish packageDish)
+    public PackageDishResponse patchPackageDish(Long id, PackageDishRequest request)
     {
-        PackageDish existing = getPackageDishById(id);
-        if (packageDish.getMenuPackage() != null)
-        {
-            existing.setMenuPackage(packageService.getPackageById(packageDish.getMenuPackage().getId()));
-        }
-        if (packageDish.getDish() != null) existing.setDish(dishService.getDishById(packageDish.getDish().getId()));
-        if (packageDish.getQuantity() != null) existing.setQuantity(packageDish.getQuantity());
-        return packageDishRepository.save(existing);
+        PackageDish existing = findOwned(id);
+        if (request.packageId() != null) existing.setMenuPackage(packageService.findOwnedPackage(request.packageId()));
+        if (request.dishId() != null) existing.setDish(dishService.findDish(request.dishId()));
+        if (request.quantity() != null) existing.setQuantity(request.quantity());
+        return PackageDishResponse.from(packageDishRepository.save(existing));
+    }
+
+    private PackageDish findOwned(Long id)
+    {
+        return packageDishRepository.findByIdAndMenuPackageVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Package dish", id));
     }
 }

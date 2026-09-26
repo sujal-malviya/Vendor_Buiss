@@ -1,6 +1,5 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -30,6 +29,5 @@ public class VendorBankDetail {
 
     @OneToOne
     @JoinColumn(name = "vendor_id", referencedColumnName = "id", nullable = false)
-    @JsonIgnore
     private VendorProfile vendorProfile;
 }

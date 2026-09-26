@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.OrderPolicyRequest;
+import com.vendorhub.vendor_onboarding.dto.OrderPolicyResponse;
 import com.vendorhub.vendor_onboarding.entity.OrderPolicies;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -23,48 +25,53 @@ public class OrderPolicyService {
         this.currentVendor = currentVendor;
     }
 
-    public OrderPolicies createOrderPolicy(OrderPolicies orderPolicies)
+    public OrderPolicyResponse createOrderPolicy(OrderPolicyRequest request)
     {
         VendorProfile profile = currentVendor.profile();
         if (orderPoliciesRepository.existsByVendorProfileId(profile.getId()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Order policies already exist. Use PUT or PATCH to change them.");
         }
-        orderPolicies.setId(null);
+        OrderPolicies orderPolicies = new OrderPolicies();
+        request.applyTo(orderPolicies);
         orderPolicies.setVendorProfile(profile);
-        return orderPoliciesRepository.save(orderPolicies);
+        return OrderPolicyResponse.from(orderPoliciesRepository.save(orderPolicies));
     }
 
-    public List<OrderPolicies> getMyOrderPolicies()
+    public List<OrderPolicyResponse> getMyOrderPolicies()
     {
-        return orderPoliciesRepository.findByVendorProfileVendorId(currentVendor.id());
+        return orderPoliciesRepository.findByVendorProfileVendorId(currentVendor.id()).stream()
+                .map(OrderPolicyResponse::from)
+                .toList();
     }
 
-    public OrderPolicies getOrderPolicyById(Long id)
+    public OrderPolicyResponse getOrderPolicyById(Long id)
     {
-        return orderPoliciesRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Order policy", id));
+        return OrderPolicyResponse.from(findOwned(id));
     }
 
     public void deleteOrderPolicy(Long id)
     {
-        orderPoliciesRepository.delete(getOrderPolicyById(id));
+        orderPoliciesRepository.delete(findOwned(id));
     }
 
-    public OrderPolicies updateOrderPolicy(Long id, OrderPolicies orderPolicies)
+    public OrderPolicyResponse updateOrderPolicy(Long id, OrderPolicyRequest request)
     {
-        OrderPolicies existing = getOrderPolicyById(id);
-        orderPolicies.setId(existing.getId());
-        orderPolicies.setVendorProfile(existing.getVendorProfile());
-        return orderPoliciesRepository.save(orderPolicies);
+        OrderPolicies existing = findOwned(id);
+        request.applyTo(existing);
+        return OrderPolicyResponse.from(orderPoliciesRepository.save(existing));
     }
 
-    public OrderPolicies patchOrderPolicy(Long id, OrderPolicies orderPolicies)
+    public OrderPolicyResponse patchOrderPolicy(Long id, OrderPolicyRequest request)
     {
-        OrderPolicies existing = getOrderPolicyById(id);
-        if (orderPolicies.getModifyOrders() != null) existing.setModifyOrders(orderPolicies.getModifyOrders());
-        if (orderPolicies.getCancelGracePeriod() != null) existing.setCancelGracePeriod(orderPolicies.getCancelGracePeriod());
-        if (orderPolicies.getMaxAllowedDuration() != null) existing.setMaxAllowedDuration(orderPolicies.getMaxAllowedDuration());
-        return orderPoliciesRepository.save(existing);
+        OrderPolicies existing = findOwned(id);
+        request.patch(existing);
+        return OrderPolicyResponse.from(orderPoliciesRepository.save(existing));
+    }
+
+    private OrderPolicies findOwned(Long id)
+    {
+        return orderPoliciesRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Order policy", id));
     }
 }

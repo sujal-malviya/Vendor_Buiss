@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.ServiceAreaRequest;
+import com.vendorhub.vendor_onboarding.dto.ServiceAreaResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.entity.VendorServiceArea;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -23,53 +25,53 @@ public class VendorServiceAreaService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorServiceArea createServiceArea(VendorServiceArea serviceArea)
+    public ServiceAreaResponse createServiceArea(ServiceAreaRequest request)
     {
         VendorProfile profile = currentVendor.profile();
         if (vendorServiceAreaRepository.existsByVendorProfileId(profile.getId()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Service area already exists. Use PUT or PATCH to change it.");
         }
-        serviceArea.setId(null);
+        VendorServiceArea serviceArea = new VendorServiceArea();
+        request.applyTo(serviceArea);
         serviceArea.setVendorProfile(profile);
-        return vendorServiceAreaRepository.save(serviceArea);
+        return ServiceAreaResponse.from(vendorServiceAreaRepository.save(serviceArea));
     }
 
-    public List<VendorServiceArea> getMyServiceAreas()
+    public List<ServiceAreaResponse> getMyServiceAreas()
     {
-        return vendorServiceAreaRepository.findByVendorProfileVendorId(currentVendor.id());
+        return vendorServiceAreaRepository.findByVendorProfileVendorId(currentVendor.id()).stream()
+                .map(ServiceAreaResponse::from)
+                .toList();
     }
 
-    public VendorServiceArea getServiceAreaById(Long id)
+    public ServiceAreaResponse getServiceAreaById(Long id)
     {
-        return vendorServiceAreaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Service area", id));
+        return ServiceAreaResponse.from(findOwned(id));
     }
 
     public void deleteServiceArea(Long id)
     {
-        vendorServiceAreaRepository.delete(getServiceAreaById(id));
+        vendorServiceAreaRepository.delete(findOwned(id));
     }
 
-    public VendorServiceArea updateServiceArea(Long id, VendorServiceArea serviceArea)
+    public ServiceAreaResponse updateServiceArea(Long id, ServiceAreaRequest request)
     {
-        VendorServiceArea existing = getServiceAreaById(id);
-        serviceArea.setId(existing.getId());
-        serviceArea.setVendorProfile(existing.getVendorProfile());
-        return vendorServiceAreaRepository.save(serviceArea);
+        VendorServiceArea existing = findOwned(id);
+        request.applyTo(existing);
+        return ServiceAreaResponse.from(vendorServiceAreaRepository.save(existing));
     }
 
-    public VendorServiceArea patchServiceArea(Long id, VendorServiceArea serviceArea)
+    public ServiceAreaResponse patchServiceArea(Long id, ServiceAreaRequest request)
     {
-        VendorServiceArea existing = getServiceAreaById(id);
-        if (serviceArea.getMaxPeople() != null) existing.setMaxPeople(serviceArea.getMaxPeople());
-        if (serviceArea.getServicePin() != null) existing.setServicePin(serviceArea.getServicePin());
-        if (serviceArea.getServiceCity() != null) existing.setServiceCity(serviceArea.getServiceCity());
-        if (serviceArea.getServiceCountry() != null) existing.setServiceCountry(serviceArea.getServiceCountry());
-        if (serviceArea.getOrderSize() != null) existing.setOrderSize(serviceArea.getOrderSize());
-        if (serviceArea.getMinimumOrderSize() != null) existing.setMinimumOrderSize(serviceArea.getMinimumOrderSize());
-        if (serviceArea.getMaximumOrderSize() != null) existing.setMaximumOrderSize(serviceArea.getMaximumOrderSize());
-        if (serviceArea.getMinOrderValue() != null) existing.setMinOrderValue(serviceArea.getMinOrderValue());
-        return vendorServiceAreaRepository.save(existing);
+        VendorServiceArea existing = findOwned(id);
+        request.patch(existing);
+        return ServiceAreaResponse.from(vendorServiceAreaRepository.save(existing));
+    }
+
+    private VendorServiceArea findOwned(Long id)
+    {
+        return vendorServiceAreaRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Service area", id));
     }
 }

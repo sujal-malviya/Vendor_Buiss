@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorServiceArea;
+import com.vendorhub.vendor_onboarding.dto.ServiceAreaRequest;
+import com.vendorhub.vendor_onboarding.dto.ServiceAreaResponse;
 import com.vendorhub.vendor_onboarding.service.VendorServiceAreaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class VendorServiceAreaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorServiceArea createServiceArea(@Valid @RequestBody VendorServiceArea serviceArea)
+    public ServiceAreaResponse createServiceArea(@Valid @RequestBody ServiceAreaRequest request)
     {
-        return vendorServiceAreaService.createServiceArea(serviceArea);
+        return vendorServiceAreaService.createServiceArea(request);
     }
 
     @GetMapping
-    public List<VendorServiceArea> getMyServiceAreas()
+    public List<ServiceAreaResponse> getMyServiceAreas()
     {
         return vendorServiceAreaService.getMyServiceAreas();
     }
 
     @GetMapping("/{id}")
-    public VendorServiceArea getServiceAreaById(@PathVariable Long id)
+    public ServiceAreaResponse getServiceAreaById(@PathVariable Long id)
     {
         return vendorServiceAreaService.getServiceAreaById(id);
     }
@@ -46,14 +47,14 @@ public class VendorServiceAreaController {
     }
 
     @PutMapping("/{id}")
-    public VendorServiceArea updateServiceArea(@PathVariable Long id, @Valid @RequestBody VendorServiceArea serviceArea)
+    public ServiceAreaResponse updateServiceArea(@PathVariable Long id, @Valid @RequestBody ServiceAreaRequest request)
     {
-        return vendorServiceAreaService.updateServiceArea(id, serviceArea);
+        return vendorServiceAreaService.updateServiceArea(id, request);
     }
 
     @PatchMapping("/{id}")
-    public VendorServiceArea patchServiceArea(@PathVariable Long id, @RequestBody VendorServiceArea serviceArea)
+    public ServiceAreaResponse patchServiceArea(@PathVariable Long id, @RequestBody ServiceAreaRequest request)
     {
-        return vendorServiceAreaService.patchServiceArea(id, serviceArea);
+        return vendorServiceAreaService.patchServiceArea(id, request);
     }
 }

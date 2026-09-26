@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.Dish;
+import com.vendorhub.vendor_onboarding.dto.DishRequest;
+import com.vendorhub.vendor_onboarding.dto.DishResponse;
 import com.vendorhub.vendor_onboarding.service.DishService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,19 +23,19 @@ public class DishController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Dish createDish(@Valid @RequestBody Dish dish)
+    public DishResponse createDish(@Valid @RequestBody DishRequest request)
     {
-        return dishService.createDish(dish);
+        return dishService.createDish(request);
     }
 
     @GetMapping
-    public List<Dish> getAllDishes()
+    public List<DishResponse> getAllDishes()
     {
         return dishService.getAllDishes();
     }
 
     @GetMapping("/{id}")
-    public Dish getDishById(@PathVariable Long id)
+    public DishResponse getDishById(@PathVariable Long id)
     {
         return dishService.getDishById(id);
     }
@@ -47,14 +48,14 @@ public class DishController {
     }
 
     @PutMapping("/{id}")
-    public Dish updateDish(@PathVariable Long id, @Valid @RequestBody Dish dish)
+    public DishResponse updateDish(@PathVariable Long id, @Valid @RequestBody DishRequest request)
     {
-        return dishService.updateDish(id, dish);
+        return dishService.updateDish(id, request);
     }
 
     @PatchMapping("/{id}")
-    public Dish patchDish(@PathVariable Long id, @RequestBody Dish dish)
+    public DishResponse patchDish(@PathVariable Long id, @RequestBody DishRequest request)
     {
-        return dishService.patchDish(id, dish);
+        return dishService.patchDish(id, request);
     }
 }

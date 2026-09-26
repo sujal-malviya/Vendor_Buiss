@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
+import com.vendorhub.vendor_onboarding.dto.BankDetailRequest;
+import com.vendorhub.vendor_onboarding.dto.BankDetailResponse;
 import com.vendorhub.vendor_onboarding.service.VendorBankService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class VendorBankDetailController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorBankDetail createBankDetail(@Valid @RequestBody VendorBankDetail bankDetail)
+    public BankDetailResponse createBankDetail(@Valid @RequestBody BankDetailRequest request)
     {
-        return vendorBankService.createBankDetail(bankDetail);
+        return vendorBankService.createBankDetail(request);
     }
 
     @GetMapping
-    public List<VendorBankDetail> getMyBankDetails()
+    public List<BankDetailResponse> getMyBankDetails()
     {
         return vendorBankService.getMyBankDetails();
     }
 
     @GetMapping("/{id}")
-    public VendorBankDetail getBankDetailById(@PathVariable Long id)
+    public BankDetailResponse getBankDetailById(@PathVariable Long id)
     {
         return vendorBankService.getBankDetailById(id);
     }
@@ -46,14 +47,15 @@ public class VendorBankDetailController {
     }
 
     @PutMapping("/{id}")
-    public VendorBankDetail updateBankDetail(@PathVariable Long id, @Valid @RequestBody VendorBankDetail bankDetail)
+    public BankDetailResponse updateBankDetail(@PathVariable Long id, @Valid @RequestBody BankDetailRequest request)
     {
-        return vendorBankService.updateBankDetail(id, bankDetail);
+        return vendorBankService.updateBankDetail(id, request);
     }
 
+    // No @Valid: PATCH may send only some fields, the rest arrive as null and are left unchanged
     @PatchMapping("/{id}")
-    public VendorBankDetail patchBankDetail(@PathVariable Long id, @RequestBody VendorBankDetail bankDetail)
+    public BankDetailResponse patchBankDetail(@PathVariable Long id, @RequestBody BankDetailRequest request)
     {
-        return vendorBankService.patchBankDetail(id, bankDetail);
+        return vendorBankService.patchBankDetail(id, request);
     }
 }

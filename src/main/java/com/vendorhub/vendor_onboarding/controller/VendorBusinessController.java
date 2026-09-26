@@ -1,6 +1,7 @@
 package com.vendorhub.vendor_onboarding.controller;
 
-import com.vendorhub.vendor_onboarding.entity.VendorBusinessInfo;
+import com.vendorhub.vendor_onboarding.dto.BusinessInfoRequest;
+import com.vendorhub.vendor_onboarding.dto.BusinessInfoResponse;
 import com.vendorhub.vendor_onboarding.service.VendorBusinessService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,19 +22,19 @@ public class VendorBusinessController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VendorBusinessInfo createBusinessInfo(@Valid @RequestBody VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse createBusinessInfo(@Valid @RequestBody BusinessInfoRequest request)
     {
-        return vendorBusinessService.createBusinessInfo(businessInfo);
+        return vendorBusinessService.createBusinessInfo(request);
     }
 
     @GetMapping
-    public List<VendorBusinessInfo> getMyBusinessInfo()
+    public List<BusinessInfoResponse> getMyBusinessInfo()
     {
         return vendorBusinessService.getMyBusinessInfo();
     }
 
     @GetMapping("/{id}")
-    public VendorBusinessInfo getBusinessInfoById(@PathVariable Long id)
+    public BusinessInfoResponse getBusinessInfoById(@PathVariable Long id)
     {
         return vendorBusinessService.getBusinessInfoById(id);
     }
@@ -46,14 +47,14 @@ public class VendorBusinessController {
     }
 
     @PutMapping("/{id}")
-    public VendorBusinessInfo updateBusinessInfo(@PathVariable Long id, @Valid @RequestBody VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse updateBusinessInfo(@PathVariable Long id, @Valid @RequestBody BusinessInfoRequest request)
     {
-        return vendorBusinessService.updateBusinessInfo(id, businessInfo);
+        return vendorBusinessService.updateBusinessInfo(id, request);
     }
 
     @PatchMapping("/{id}")
-    public VendorBusinessInfo patchBusinessInfo(@PathVariable Long id, @RequestBody VendorBusinessInfo businessInfo)
+    public BusinessInfoResponse patchBusinessInfo(@PathVariable Long id, @RequestBody BusinessInfoRequest request)
     {
-        return vendorBusinessService.patchBusinessInfo(id, businessInfo);
+        return vendorBusinessService.patchBusinessInfo(id, request);
     }
 }

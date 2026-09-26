@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.PackageRequest;
+import com.vendorhub.vendor_onboarding.dto.PackageResponse;
 import com.vendorhub.vendor_onboarding.entity.MenuPackage;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
@@ -24,49 +26,53 @@ public class PackageService {
         this.currentVendor = currentVendor;
     }
 
-    public MenuPackage createPackage(MenuPackage menuPackage)
+    public PackageResponse createPackage(PackageRequest request)
     {
-        menuPackage.setId(null);
+        MenuPackage menuPackage = new MenuPackage();
+        request.applyTo(menuPackage);
         menuPackage.setVendor(currentVendor.vendor());
-        return packageRepository.save(menuPackage);
+        return PackageResponse.from(packageRepository.save(menuPackage));
     }
 
-    public List<MenuPackage> getMyPackages()
+    public List<PackageResponse> getMyPackages()
     {
-        return packageRepository.findByVendorId(currentVendor.id());
+        return packageRepository.findByVendorId(currentVendor.id()).stream()
+                .map(PackageResponse::from)
+                .toList();
     }
 
-    public MenuPackage getPackageById(Long id)
+    public PackageResponse getPackageById(Long id)
     {
-        return packageRepository.findByIdAndVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Package", id));
+        return PackageResponse.from(findOwnedPackage(id));
     }
 
     // Remove the dishes inside the package first, otherwise the package_dish foreign key blocks the delete
     @Transactional
     public void deletePackage(Long id)
     {
-        MenuPackage menuPackage = getPackageById(id);
+        MenuPackage menuPackage = findOwnedPackage(id);
         packageDishRepository.deleteByMenuPackageId(menuPackage.getId());
         packageRepository.delete(menuPackage);
     }
 
-    public MenuPackage updatePackage(Long id, MenuPackage menuPackage)
+    public PackageResponse updatePackage(Long id, PackageRequest request)
     {
-        MenuPackage existing = getPackageById(id);
-        menuPackage.setId(existing.getId());
-        menuPackage.setVendor(existing.getVendor());
-        return packageRepository.save(menuPackage);
+        MenuPackage existing = findOwnedPackage(id);
+        request.applyTo(existing);
+        return PackageResponse.from(packageRepository.save(existing));
     }
 
-    public MenuPackage patchPackage(Long id, MenuPackage menuPackage)
+    public PackageResponse patchPackage(Long id, PackageRequest request)
     {
-        MenuPackage existing = getPackageById(id);
-        if (menuPackage.getName() != null) existing.setName(menuPackage.getName());
-        if (menuPackage.getDescription() != null) existing.setDescription(menuPackage.getDescription());
-        if (menuPackage.getPrice() != null) existing.setPrice(menuPackage.getPrice());
-        if (menuPackage.getPriceUnit() != null) existing.setPriceUnit(menuPackage.getPriceUnit());
-        if (menuPackage.getActive() != null) existing.setActive(menuPackage.getActive());
-        return packageRepository.save(existing);
+        MenuPackage existing = findOwnedPackage(id);
+        request.patch(existing);
+        return PackageResponse.from(packageRepository.save(existing));
+    }
+
+    // Public because PackageDishService needs the entity to check the package belongs to this vendor
+    public MenuPackage findOwnedPackage(Long id)
+    {
+        return packageRepository.findByIdAndVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Package", id));
     }
 }

@@ -1,6 +1,5 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -57,6 +56,5 @@ public class VendorServiceArea {
 
     @OneToOne
     @JoinColumn(name = "vendor_id", nullable = false, referencedColumnName = "id")
-    @JsonIgnore
     private VendorProfile vendorProfile;
 }

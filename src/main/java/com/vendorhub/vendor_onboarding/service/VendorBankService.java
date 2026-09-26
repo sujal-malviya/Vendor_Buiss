@@ -1,5 +1,7 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.BankDetailRequest;
+import com.vendorhub.vendor_onboarding.dto.BankDetailResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorBankDetail;
 import com.vendorhub.vendor_onboarding.entity.VendorProfile;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
@@ -23,49 +25,54 @@ public class VendorBankService {
         this.currentVendor = currentVendor;
     }
 
-    public VendorBankDetail createBankDetail(VendorBankDetail bankDetail)
+    public BankDetailResponse createBankDetail(BankDetailRequest request)
     {
         VendorProfile profile = currentVendor.profile();
         if (vendorBankRepository.existsByVendorProfileId(profile.getId()))
         {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Bank details already exist. Use PUT or PATCH to change them.");
         }
-        bankDetail.setId(null);
-        bankDetail.setVendorProfile(profile);
-        return vendorBankRepository.save(bankDetail);
+        VendorBankDetail bankDetail = new VendorBankDetail();   // request DTO -> new entity
+        request.applyTo(bankDetail);
+        bankDetail.setVendorProfile(profile);                   // the owner always comes from the token
+        return BankDetailResponse.from(vendorBankRepository.save(bankDetail));   // entity -> response DTO
     }
 
-    public List<VendorBankDetail> getMyBankDetails()
+    public List<BankDetailResponse> getMyBankDetails()
     {
-        return vendorBankRepository.findByVendorProfileVendorId(currentVendor.id());
+        return vendorBankRepository.findByVendorProfileVendorId(currentVendor.id()).stream()
+                .map(BankDetailResponse::from)
+                .toList();
     }
 
-    // Looks the row up by id AND owner, so another vendor's id gives 404 instead of their data
-    public VendorBankDetail getBankDetailById(Long id)
+    public BankDetailResponse getBankDetailById(Long id)
     {
-        return vendorBankRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
-                .orElseThrow(() -> new ResourceNotFoundException("Bank detail", id));
+        return BankDetailResponse.from(findOwned(id));
     }
 
     public void deleteBankDetail(Long id)
     {
-        vendorBankRepository.delete(getBankDetailById(id));
+        vendorBankRepository.delete(findOwned(id));
     }
 
-    public VendorBankDetail updateBankDetail(Long id, VendorBankDetail bankDetail)
+    public BankDetailResponse updateBankDetail(Long id, BankDetailRequest request)
     {
-        VendorBankDetail existing = getBankDetailById(id);
-        bankDetail.setId(existing.getId());
-        bankDetail.setVendorProfile(existing.getVendorProfile());
-        return vendorBankRepository.save(bankDetail);
+        VendorBankDetail existing = findOwned(id);
+        request.applyTo(existing);
+        return BankDetailResponse.from(vendorBankRepository.save(existing));
     }
 
-    public VendorBankDetail patchBankDetail(Long id, VendorBankDetail bankDetail)
+    public BankDetailResponse patchBankDetail(Long id, BankDetailRequest request)
     {
-        VendorBankDetail existing = getBankDetailById(id);
-        if (bankDetail.getAccountNumber() != null) existing.setAccountNumber(bankDetail.getAccountNumber());
-        if (bankDetail.getAccountHolderName() != null) existing.setAccountHolderName(bankDetail.getAccountHolderName());
-        if (bankDetail.getIfscCode() != null) existing.setIfscCode(bankDetail.getIfscCode());
-        return vendorBankRepository.save(existing);
+        VendorBankDetail existing = findOwned(id);
+        request.patch(existing);
+        return BankDetailResponse.from(vendorBankRepository.save(existing));
+    }
+
+    // Looks the row up by id AND owner, so another vendor's id gives 404 instead of their data
+    private VendorBankDetail findOwned(Long id)
+    {
+        return vendorBankRepository.findByIdAndVendorProfileVendorId(id, currentVendor.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Bank detail", id));
     }
 }
