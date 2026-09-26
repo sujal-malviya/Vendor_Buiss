@@ -2,6 +2,7 @@ package com.vendorhub.vendor_onboarding.service;
 
 import java.time.Instant;
 
+import com.vendorhub.vendor_onboarding.entity.Customer;
 import com.vendorhub.vendor_onboarding.entity.Vendor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -25,12 +26,22 @@ public class JwtService {
 	}
 
 	public String createToken(Vendor vendor) {
+		// Spring turns "scope": "ADMIN" into the authority SCOPE_ADMIN, which SecurityConfig checks
+		return createToken(vendor.getId(), vendor.getUsername(), vendor.getRole().name());
+	}
+
+	// Customer and vendor ids both start at 1, so the "scope" claim is what tells them apart.
+	// SecurityConfig only lets SCOPE_CUSTOMER tokens into /api/customer/** and never into /api/vendor/**.
+	public String createToken(Customer customer) {
+		return createToken(customer.getId(), customer.getEmail(), "CUSTOMER");
+	}
+
+	private String createToken(Long subjectId, String identifier, String scope) {
 		Instant issuedAt = Instant.now();
 		JwtClaimsSet claims = JwtClaimsSet.builder()
-			.subject(vendor.getId().toString())
-			.claim("identifier", vendor.getUsername())
-			// Spring turns "scope": "ADMIN" into the authority SCOPE_ADMIN, which SecurityConfig checks
-			.claim("scope", vendor.getRole().name())
+			.subject(subjectId.toString())
+			.claim("identifier", identifier)
+			.claim("scope", scope)
 			.issuedAt(issuedAt)
 			.expiresAt(issuedAt.plusSeconds(expirationSeconds))
 			.build();

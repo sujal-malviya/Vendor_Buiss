@@ -3,11 +3,13 @@ package com.vendorhub.vendor_onboarding.controller;
 import com.vendorhub.vendor_onboarding.dto.EventTypeRequest;
 import com.vendorhub.vendor_onboarding.dto.EventTypeResponse;
 import com.vendorhub.vendor_onboarding.service.EventTypeService;
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 // Shared list: every vendor can read it, only admins can change it (see SecurityConfig)
 @RestController
@@ -29,9 +31,9 @@ public class EventTypeController {
     }
 
     @GetMapping
-    public List<EventTypeResponse> getAllEventTypes()
+    public PageResponse<EventTypeResponse> getAllEventTypes(@ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        return eventTypeService.getAllEventTypes();
+        return eventTypeService.getAllEventTypes(pageable);
     }
 
     @GetMapping("/{id}")

@@ -9,6 +9,7 @@ import com.vendorhub.vendor_onboarding.repository.VendorBusinessInfoRepository;
 import com.vendorhub.vendor_onboarding.security.CurrentVendor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -50,6 +51,8 @@ public class VendorBusinessService {
         return BusinessInfoResponse.from(findOwned(id));
     }
 
+    // One transaction, so the unlink below and the delete happen together on the same loaded objects
+    @Transactional
     public void deleteBusinessInfo(Long id)
     {
         VendorBusinessInfo existing = findOwned(id);

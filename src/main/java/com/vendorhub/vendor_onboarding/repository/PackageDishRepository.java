@@ -3,12 +3,14 @@ package com.vendorhub.vendor_onboarding.repository;
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 
 public interface PackageDishRepository extends JpaRepository<PackageDish,Long> {
 
-    List<PackageDish> findByMenuPackageVendorId(Long vendorId);
+    Page<PackageDish> findByMenuPackageVendorId(Long vendorId, Pageable pageable);
 
     Optional<PackageDish> findByIdAndMenuPackageVendorId(Long id, Long vendorId);
 

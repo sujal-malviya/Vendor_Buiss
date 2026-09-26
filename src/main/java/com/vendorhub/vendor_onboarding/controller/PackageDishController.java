@@ -3,11 +3,13 @@ package com.vendorhub.vendor_onboarding.controller;
 import com.vendorhub.vendor_onboarding.dto.PackageDishRequest;
 import com.vendorhub.vendor_onboarding.dto.PackageDishResponse;
 import com.vendorhub.vendor_onboarding.service.PackageDishService;
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendor/package-dishes")
@@ -28,9 +30,9 @@ public class PackageDishController {
     }
 
     @GetMapping
-    public List<PackageDishResponse> getMyPackageDishes()
+    public PageResponse<PackageDishResponse> getMyPackageDishes(@ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
-        return packageDishService.getMyPackageDishes();
+        return packageDishService.getMyPackageDishes(pageable);
     }
 
     @GetMapping("/{id}")

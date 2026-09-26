@@ -15,28 +15,34 @@ original delivery phases combined into one).
 - **Spring Boot 4.1.1**
 - **Gradle**
 - **PostgreSQL** (H2 in-memory database for tests)
+- **Flyway** — versioned database migrations (`src/main/resources/db/migration`)
 - **Spring Security** + **OAuth2 Resource Server** (Nimbus JWT, HS256) — stateless authentication
+- **springdoc-openapi** — Swagger UI at `/swagger-ui.html`
 - **Lombok**
 
 ## Status
 
 ### ✅ Implemented
 - Vendor registration and login (`/api/auth/register`, `/api/auth/login`)
-- JWT-based stateless authentication; roles `VENDOR` and `ADMIN` (carried in the token's `scope` claim)
+- Customer registration and login (`/api/customer/auth/register`, `/api/customer/auth/login`)
+- JWT-based stateless authentication; the token's `scope` claim is `VENDOR`, `ADMIN` or `CUSTOMER`,
+  and a customer token can never reach `/api/vendor/**` (or the other way round)
 - Password hashing with BCrypt
 - Vendor onboarding sections (profile, business info, bank details, service area,
   order policies, payment plan, media) — each vendor can only see and change their own
 - Menu: packages, dishes inside packages, and the vendor's own dish prices
 - Shared lists (dish catalog, event types, required items) — readable by everyone, changeable only by admins
+- Request/response DTOs for every endpoint (entities never leave the service layer)
+- Pagination on lists that can grow (`?page=0&size=20&sort=name,asc`, max size 100)
 - Global exception handling: 400 validation errors, 404 not found, 409 conflicts
-- Integration tests (`VendorApiTests`)
+- Integration tests (`VendorApiTests`, `CustomerApiTests`)
 
 ### 🚧 Planned (see BRD Section 22 — Consolidated Build Scope)
 Organized by domain, to be built and tested one at a time:
 
 | Domain | Core Entities |
 |---|---|
-| Identity & Profile | Customer, VendorCapacity |
+| Identity & Profile | Customer profile & addresses, VendorCapacity |
 | Lead Generation & Sharing | MenuLink (public/private) |
 | Booking, Quotation & Versioning | Order, OrderVersion, OrderItem, Quotation |
 | Payments | Payment, PaymentLink, PlatformFee |
@@ -51,7 +57,7 @@ Organized by domain, to be built and tested one at a time:
 ```
 com.vendorhub.vendor_onboarding
 ├── VendorOnboardingApplication.java
-├── config/       → SecurityConfig (JWT encoder/decoder, access rules)
+├── config/       → SecurityConfig (JWT encoder/decoder, access rules), OpenApiConfig (Swagger)
 ├── controller/   → REST endpoints (AuthController, VendorController, ...) — only speak DTOs
 ├── dto/          → XxxRequest (what clients send) and XxxResponse (what clients get back)
 ├── service/      → business logic, JwtService — converts DTO ⇄ entity
@@ -83,10 +89,23 @@ com.vendorhub.vendor_onboarding
    ./gradlew bootRun
    ```
 
-4. Run the tests (uses an in-memory database, never touches PostgreSQL):
+   On startup Flyway creates or updates the tables, then Hibernate checks the entities match them.
+
+4. Open Swagger UI to explore and try the API: http://localhost:8080/swagger-ui.html
+   Log in, copy the token, click **Authorize**, paste it.
+
+5. Run the tests (uses an in-memory database, never touches PostgreSQL):
    ```bash
    ./gradlew test
    ```
+
+### Changing the database structure (Flyway)
+Never change tables by hand and never edit an already-applied migration. Instead:
+1. Change the entity.
+2. Add a new file `src/main/resources/db/migration/V3__short_description.sql` (next free number) with the SQL.
+3. Start the app — Flyway applies it once and records it in the `flyway_schema_history` table.
+
+If the entity and the tables don't match, the app refuses to start (`ddl-auto=validate`) and tells you which column is wrong.
 
 ### Making an admin
 Every new account is a `VENDOR`. To make one an admin, update it in the database and log in again
@@ -97,15 +116,27 @@ UPDATE vendors SET role = 'ADMIN' WHERE email = 'admin@example.com';
 
 ## API Reference
 
-All routes other than `/api/auth/**` require `Authorization: Bearer <token>`.
+All routes other than the register/login ones require `Authorization: Bearer <token>`.
 Errors are returned as JSON (`status`, `detail`, and for validation errors an `errors` map of field → message).
 
 ### Auth
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/auth/register` | Create a vendor account, returns a JWT (201) |
-| POST | `/api/auth/login` | Authenticate, returns a JWT |
-| GET | `/api/vendor/me` | Shows who the token belongs to |
+| POST | `/api/auth/login` | Vendor login (`identifier` = email or phone), returns a JWT |
+| GET | `/api/vendor/me` | Shows who the vendor token belongs to |
+| POST | `/api/customer/auth/register` | Create a customer account (`name`, `email`, `phoneNumber`, `password`), returns a JWT (201) |
+| POST | `/api/customer/auth/login` | Customer login (`identifier` = email or phone), returns a JWT |
+| GET | `/api/customer/me` | The logged-in customer's details (customer token only) |
+| GET | `/api/customer/vendors?city=Pune&page=0&size=20` | Customers search vendors (city optional, ignores case). Only vendors with business info **and** a service area are listed. |
+
+### Lists and pagination
+`/api/dishes`, `/api/vendor/event-types`, `/api/vendor/required-items`, `/api/vendor/packages`,
+`/api/vendor/package-dishes` and `/api/vendor/dishes` return one page at a time:
+```
+GET /api/vendor/packages?page=0&size=20&sort=name,asc
+→ { "content": [ ... ], "page": 0, "size": 20, "totalElements": 57, "totalPages": 3 }
+```
 
 ### Vendor onboarding (each vendor sees only their own data)
 Create your profile first — the other sections attach to it automatically.

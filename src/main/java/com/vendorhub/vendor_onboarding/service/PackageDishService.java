@@ -2,13 +2,13 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.dto.PackageDishRequest;
 import com.vendorhub.vendor_onboarding.dto.PackageDishResponse;
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import com.vendorhub.vendor_onboarding.entity.PackageDish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
 import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class PackageDishService {
@@ -37,11 +37,10 @@ public class PackageDishService {
         return PackageDishResponse.from(packageDishRepository.save(packageDish));
     }
 
-    public List<PackageDishResponse> getMyPackageDishes()
+    public PageResponse<PackageDishResponse> getMyPackageDishes(Pageable pageable)
     {
-        return packageDishRepository.findByMenuPackageVendorId(currentVendor.id()).stream()
-                .map(PackageDishResponse::from)
-                .toList();
+        return PageResponse.from(packageDishRepository.findByMenuPackageVendorId(currentVendor.id(), pageable),
+                PackageDishResponse::from);
     }
 
     public PackageDishResponse getPackageDishById(Long id)

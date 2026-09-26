@@ -38,12 +38,17 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/auth/register", "/api/auth/login", "/error",
+				.requestMatchers("/api/auth/register", "/api/auth/login",
+					"/api/customer/auth/register", "/api/customer/auth/login", "/error",
 					"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-				// Shared lists: any logged-in vendor can read them, only admins can change them.
+				// Rules are checked top to bottom; the first one that matches wins.
+				// Shared lists: anyone logged in can read them, only admins can change them.
 				// SCOPE_ADMIN comes from the "scope" claim that JwtService puts in the token.
 				.requestMatchers(HttpMethod.GET, SHARED_LISTS).authenticated()
 				.requestMatchers(SHARED_LISTS).hasAuthority("SCOPE_ADMIN")
+				// Vendor data only for vendor/admin tokens, customer data only for customer tokens
+				.requestMatchers("/api/vendor/**").hasAnyAuthority("SCOPE_VENDOR", "SCOPE_ADMIN")
+				.requestMatchers("/api/customer/**").hasAuthority("SCOPE_CUSTOMER")
 				// FIX: was denyAll(), which blocked every other API even with a valid token
 				.anyRequest().authenticated())
 			// FIX: this is what reads "Authorization: Bearer <token>" and checks the token.

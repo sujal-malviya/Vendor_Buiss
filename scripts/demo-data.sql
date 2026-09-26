@@ -13,7 +13,7 @@
 --   spice@demo.vendorhub.test, royal@demo.vendorhub.test, green@demo.vendorhub.test,
 --   coastal@demo.vendorhub.test, punjab@demo.vendorhub.test   (role VENDOR)
 --
--- Start the app once before running this, so Hibernate has created the tables.
+-- Start the app once before running this, so Flyway has created the tables.
 -- =====================================================================
 
 BEGIN;

@@ -218,6 +218,57 @@ class VendorApiTests {
     }
 
     @Test
+    void businessInfoCanBeCreatedWithProfileThenDeletedOnItsOwn() throws Exception
+    {
+        String vendor = register();
+        long profileId = id(call(vendor, post("/api/vendor/profile"),
+                "{\"name\":\"Spice\",\"address\":\"Pune\",\"businessInfo\":{\"name\":\"Spice LLP\",\"contactDetail\":\"9000000000\","
+                        + "\"address\":\"Pune\",\"gstNumber\":\"27AAFCG3456D1Z4\",\"fssaiNumber\":\"11223344556604\",\"yearsInBusiness\":3}}")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.businessInfo.name").value("Spice LLP")));
+
+        String list = call(vendor, get("/api/vendor/business-info"), null).andReturn().getResponse().getContentAsString();
+        long businessId = ((Number) JsonPath.read(list, "$[0].id")).longValue();
+
+        call(vendor, delete("/api/vendor/business-info/" + businessId), null).andExpect(status().isNoContent());
+        call(vendor, get("/api/vendor/business-info/" + businessId), null).andExpect(status().isNotFound());
+        call(vendor, get("/api/vendor/profile/" + profileId), null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.businessInfo").doesNotExist());
+    }
+
+    @Test
+    void listsArePaginated() throws Exception
+    {
+        String vendor = register();
+        for (int i = 1; i <= 3; i++)
+        {
+            call(vendor, post("/api/vendor/packages"), "{\"name\":\"Package " + i + "\"}").andExpect(status().isCreated());
+        }
+
+        call(vendor, get("/api/vendor/packages?page=0&size=2&sort=name,desc"), null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].name").value("Package 3"))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        call(vendor, get("/api/vendor/packages?page=1&size=2&sort=name,desc"), null)
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Package 1"));
+
+        call(vendor, get("/api/vendor/packages?sort=doesNotExist"), null).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void springErrorsKeepTheirStatusInsteadOfBecoming500() throws Exception
+    {
+        String vendor = register();
+        call(vendor, delete("/api/vendor/me"), null).andExpect(status().isMethodNotAllowed());
+        call(vendor, get("/api/vendor/no-such-endpoint"), null).andExpect(status().isNotFound());
+    }
+
+    @Test
     void secondProfileForSameVendorIsRejected() throws Exception
     {
         String vendor = register();

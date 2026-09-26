@@ -2,12 +2,12 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.dto.DishRequest;
 import com.vendorhub.vendor_onboarding.dto.DishResponse;
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import com.vendorhub.vendor_onboarding.entity.Dish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.DishRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class DishService {
@@ -26,11 +26,9 @@ public class DishService {
         return DishResponse.from(dishRepository.save(dish));
     }
 
-    public List<DishResponse> getAllDishes()
+    public PageResponse<DishResponse> getAllDishes(Pageable pageable)
     {
-        return dishRepository.findAll().stream()
-                .map(DishResponse::from)
-                .toList();
+        return PageResponse.from(dishRepository.findAll(pageable), DishResponse::from);
     }
 
     public DishResponse getDishById(Long id)

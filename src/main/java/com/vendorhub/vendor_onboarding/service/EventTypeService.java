@@ -2,12 +2,12 @@ package com.vendorhub.vendor_onboarding.service;
 
 import com.vendorhub.vendor_onboarding.dto.EventTypeRequest;
 import com.vendorhub.vendor_onboarding.dto.EventTypeResponse;
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import com.vendorhub.vendor_onboarding.entity.EventType;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.EventTypeRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class EventTypeService {
@@ -26,11 +26,9 @@ public class EventTypeService {
         return EventTypeResponse.from(eventTypeRepository.save(eventType));
     }
 
-    public List<EventTypeResponse> getAllEventTypes()
+    public PageResponse<EventTypeResponse> getAllEventTypes(Pageable pageable)
     {
-        return eventTypeRepository.findAll().stream()
-                .map(EventTypeResponse::from)
-                .toList();
+        return PageResponse.from(eventTypeRepository.findAll(pageable), EventTypeResponse::from);
     }
 
     public EventTypeResponse getEventTypeById(Long id)

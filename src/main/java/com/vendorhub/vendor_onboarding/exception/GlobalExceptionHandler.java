@@ -1,10 +1,14 @@
 package com.vendorhub.vendor_onboarding.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +25,8 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     ProblemDetail handleNotFound(ResourceNotFoundException ex)
@@ -73,10 +79,32 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request body is missing or is not valid JSON.");
     }
 
+    // e.g. GET /api/dishes?sort=doesNotExist
+    @ExceptionHandler(PropertyReferenceException.class)
+    ProblemDetail handleBadSortField(PropertyReferenceException ex)
+    {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Cannot sort by '" + ex.getPropertyName() + "'.");
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<ProblemDetail> handleResponseStatus(ResponseStatusException ex)
     {
         return ResponseEntity.status(ex.getStatusCode()).body(ex.getBody());
+    }
+
+    // Anything not handled above. Spring's own errors (404 unknown URL, 405 wrong method, 400 missing
+    // parameter, ...) carry their status, so pass them through. Real bugs are logged in full on the server,
+    // and the client only gets a generic message: no SQL, class names or stack traces.
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ProblemDetail> handleUnexpected(Exception ex)
+    {
+        if (ex instanceof ErrorResponse errorResponse)
+        {
+            return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse.getBody());
+        }
+        log.error("Unexpected error", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong. Please try again later."));
     }
 
     private ProblemDetail validationProblem(Map<String, String> errors)

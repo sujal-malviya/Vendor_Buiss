@@ -1,14 +1,14 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import com.vendorhub.vendor_onboarding.dto.VendorDishRequest;
 import com.vendorhub.vendor_onboarding.dto.VendorDishResponse;
 import com.vendorhub.vendor_onboarding.entity.VendorDish;
 import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.VendorDishRepository;
 import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class VendorDishService {
@@ -34,11 +34,9 @@ public class VendorDishService {
         return VendorDishResponse.from(vendorDishRepository.save(vendorDish));
     }
 
-    public List<VendorDishResponse> getMyVendorDishes()
+    public PageResponse<VendorDishResponse> getMyVendorDishes(Pageable pageable)
     {
-        return vendorDishRepository.findByVendorId(currentVendor.id()).stream()
-                .map(VendorDishResponse::from)
-                .toList();
+        return PageResponse.from(vendorDishRepository.findByVendorId(currentVendor.id(), pageable), VendorDishResponse::from);
     }
 
     public VendorDishResponse getVendorDishById(Long id)

@@ -1,78 +1,36 @@
 package com.vendorhub.vendor_onboarding.entity;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.jspecify.annotations.Nullable;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-
+// A plain entity: customers log in through CustomerAuthService (not Spring's UserDetailsService),
+// so this class does not need to implement UserDetails.
 @Entity
 @Table(name = "customers")
 @Getter
 @Setter
-public class Customer implements UserDetails {
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "name is required")
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(name = "email")
-    @NotBlank
+    @NotBlank(message = "email is required")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-
-
-    @Column(name = "phone_number")
-    @NotBlank
+    @NotBlank(message = "phone number is required")
+    @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
 
-
-    @Column(name = "password")
+    // Always a BCrypt hash, never the plain password
     @NotBlank
+    @Column(name = "password", nullable = false)
     private String password;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
-    }
-
-    @Override
-    public @Nullable String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return  email != null ? email : phoneNumber;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
-    }
 }

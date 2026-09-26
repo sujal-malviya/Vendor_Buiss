@@ -1,5 +1,6 @@
 package com.vendorhub.vendor_onboarding.service;
 
+import com.vendorhub.vendor_onboarding.dto.PageResponse;
 import com.vendorhub.vendor_onboarding.dto.PackageRequest;
 import com.vendorhub.vendor_onboarding.dto.PackageResponse;
 import com.vendorhub.vendor_onboarding.entity.MenuPackage;
@@ -7,10 +8,9 @@ import com.vendorhub.vendor_onboarding.exception.ResourceNotFoundException;
 import com.vendorhub.vendor_onboarding.repository.PackageDishRepository;
 import com.vendorhub.vendor_onboarding.repository.PackageRepository;
 import com.vendorhub.vendor_onboarding.security.CurrentVendor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class PackageService {
@@ -34,11 +34,9 @@ public class PackageService {
         return PackageResponse.from(packageRepository.save(menuPackage));
     }
 
-    public List<PackageResponse> getMyPackages()
+    public PageResponse<PackageResponse> getMyPackages(Pageable pageable)
     {
-        return packageRepository.findByVendorId(currentVendor.id()).stream()
-                .map(PackageResponse::from)
-                .toList();
+        return PageResponse.from(packageRepository.findByVendorId(currentVendor.id(), pageable), PackageResponse::from);
     }
 
     public PackageResponse getPackageById(Long id)
